@@ -63,7 +63,7 @@ with open(path_out_model + '/' + 'ModelCatastro.pkl', 'rb') as file:
 ### EXECUTION
 
 ### LOAD DATA
-engine = create_engine('postgresql://postgres:LFnnLUQZQMJ9@db-test2.cxqola6hllvk.us-east-2.rds.amazonaws.com/t96_dev')
+engine = create_engine('YOUR CONNECTION STRING')
 DF = pd.read_sql("SELECT * from vw_pendiente_modelo", engine.connect())
 resuelve_O = pd.read_csv(path_data + '/' + file_in_resuelve)
 resuelve_e = DF
@@ -73,8 +73,8 @@ stopwords_spanish = stopwords.words('spanish')
 resuelve_e['RE'] = ''
 for r in tqdm(range(len(resuelve_e))):
     text_temp = resuelve_e['resuelve'][r]
-    text_temp = re.sub(r'C.C.', r'CÉDULA', text_temp)
-    text_temp = re.sub(r'No.', r'NÚMERO', text_temp)
+    text_temp = re.sub(r'C.C.', r'CÃ‰DULA', text_temp)
+    text_temp = re.sub(r'No.', r'NÃšMERO', text_temp)
     text_temp = sent_tokenize(text_temp.lower())
     text_temp2 = []
     for sentence in range(len(text_temp)):
@@ -91,8 +91,8 @@ for r in tqdm(range(len(resuelve_e))):
 resuelve_O['RE'] = ''
 for r in tqdm(range(len(resuelve_O))):
     text_temp = resuelve_O['Resuelve'][r]
-    text_temp = re.sub(r'C.C.', r'CÉDULA', text_temp)
-    text_temp = re.sub(r'No.', r'NÚMERO', text_temp)
+    text_temp = re.sub(r'C.C.', r'CÃ‰DULA', text_temp)
+    text_temp = re.sub(r'No.', r'NÃšMERO', text_temp)
     text_temp = sent_tokenize(text_temp.lower())
     text_temp2 = []
     for sentence in range(len(text_temp)):
