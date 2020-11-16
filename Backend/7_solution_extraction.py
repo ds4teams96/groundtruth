@@ -19,7 +19,7 @@ file_ids = ".*.txt"
 file_input_csv = 'Union.csv'
 file_output_csv = 'resuelve.csv'
 
-engine = create_engine('postgresql://postgres:LFnnLUQZQMJ9@db-test2.cxqola6hllvk.us-east-2.rds.amazonaws.com/t96_dev')
+engine = create_engine('YOUR CONNECTION STRING')
 
 txt_inicio = ["RESUELVE",
               "R E S U ELV E",
@@ -55,7 +55,7 @@ n = 0
 
 #This function replace vocals with accent mark to vocals without accent mark
 def replace_accents(text):
-    a,b = '·ÈÌÛ˙¸¡…Õ”⁄','aeiouuAEIOU'
+    a,b = '√°√©√≠√≥√∫√º√Å√â√ç√ì√ö','aeiouuAEIOU'
     trans = str.maketrans(a,b)
     return text.translate(trans)
 #This function EXTRACT from TXT sentence the RESUELVE section
@@ -68,8 +68,8 @@ def extract_resuelve(fileid, corpus_temp):
         counter=counter+1
         line_temp = replace_accents(re.sub(' +', ' ',line).strip().upper())
         for txt in txt_inicio:
-            line = line.replace("?","").replace("ï","")
-            if bool(re.search(rf"{txt}\s*:*=*∑*[.]*$", replace_accents(re.sub(' +', ' ',line).strip()))):
+            line = line.replace("?","").replace("‚Ä¢","")
+            if bool(re.search(rf"{txt}\s*:*=*¬∑*[.]*$", replace_accents(re.sub(' +', ' ',line).strip()))):
                 inicio = counter
                 final  = len(lines)
                 break
@@ -168,12 +168,12 @@ df_resuelve = pd.DataFrame(dict_resuelve)
 #CSV provided by URT with classifications variables that we use to train models
 df = pd.read_csv(path_input + '/' + file_input_csv)
 df_resuelve = df_resuelve.merge(df[['certificado', 'radicado', 'ORDEN DE VIVIENDA',
-                                    'PROYECTOS PRODUCTIVOS PARA BENEFICIARIOS DE RESTITUCI”N', 'COMPENSACI”N VICTIMAS', 
-                                    'COMPENSACI”N TERCEROS', 'SEGUNDOS OCUPANTES', 'ALIVIO PREDIAL', 
-                                    'ALIVIO DE SERVICIOS P⁄BLICOS', 'ALIVIO DE PASIVOS FINANCIEROS', 
+                                    'PROYECTOS PRODUCTIVOS PARA BENEFICIARIOS DE RESTITUCI√ìN', 'COMPENSACI√ìN VICTIMAS', 
+                                    'COMPENSACI√ìN TERCEROS', 'SEGUNDOS OCUPANTES', 'ALIVIO PREDIAL', 
+                                    'ALIVIO DE SERVICIOS P√öBLICOS', 'ALIVIO DE PASIVOS FINANCIEROS', 
                                     'PAGOS DE COSTAS Y GASTOS JUDICIALES', 
-                                    'ADMINISTRACI”N PROYECTOS PRODUCTIVOS AGROINDUSTRIALES', 'OTRAS ”RDENES', 
-                                    'ORDENES A DIRECCI”N SOCIAL', 'ORDENES CATASTRALES']], how = 'left', on = 'Certificado')
+                                    'ADMINISTRACI√ìN PROYECTOS PRODUCTIVOS AGROINDUSTRIALES', 'OTRAS √ìRDENES', 
+                                    'ORDENES A DIRECCI√ìN SOCIAL', 'ORDENES CATASTRALES']], how = 'left', on = 'Certificado')
 df_resuelve_radicado = df_resuelve.copy()
 df_resuelve_radicado.dropna(axis = 0, subset = ['Radicado'], inplace = True)
 
