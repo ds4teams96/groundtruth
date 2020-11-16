@@ -641,7 +641,7 @@ black_list_area=list_concordances_ltc(black_list_area)
 ########################
 ###  RDS connection  ###
 ########################
-engine = create_engine('postgresql://postgres:LFnnLUQZQMJ9@db-test2.cxqola6hllvk.us-east-2.rds.amazonaws.com/t96_dev')
+engine = create_engine('YOUR CONNECTION STRING')
 
 # Insert extraction in data base
 for n in range(0,len(ids)):
