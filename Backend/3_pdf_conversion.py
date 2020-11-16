@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: latin-1 -*-
 
-### importacion de librerías
+### importacion de librerÃ­as
 
-#####Librerías para ocr_processing()
+#####LibrerÃ­as para ocr_processing()
 from tika import parser
 from time import time
 import os
@@ -15,15 +15,15 @@ from PIL import Image
 import cv2
 from sqlalchemy import create_engine
 
-#####Librerías para correct_text_n_words
+#####LibrerÃ­as para correct_text_n_words
 import re 
 
-#####librerías para prob_docs_errors_greater()
+#####librerÃ­as para prob_docs_errors_greater()
 import numpy as np
 from scipy.stats import poisson
 import pandas as pd
 
-#####librerías para doc_errors
+#####librerÃ­as para doc_errors
 import unidecode
 from spellchecker import  SpellChecker
 import pickle
@@ -112,20 +112,20 @@ prob_list = []
 # Funciones
 
 def update_converted_document(DBengine, file_id, conv_status, file_type, n_pages):
-    """Esta función actualiza los estados, tipos y número de páginas de las sentencias en la base de datos,
-    colocádolas como corresponden según los parámetros enviados """
+    """Esta funciÃ³n actualiza los estados, tipos y nÃºmero de pÃ¡ginas de las sentencias en la base de datos,
+    colocÃ¡dolas como corresponden segÃºn los parÃ¡metros enviados """
     strSQL = "update mt_sentencia set estado = '" + str(conv_status) + "', tipo_archivo = '" + str(file_type)
     strSQL = strSQL + "', paginas = '" + str(n_pages) + "' where certificado = '" + str(file_id) + "'"
     DBengine.execute(strSQL)
 
-#####Función PDF_read_from_path() -- lectura de los PDF de una ruta
+#####FunciÃ³n PDF_read_from_path() -- lectura de los PDF de una ruta
 def PDF_read_from_path(path_input, path_image_output, path_output, path_OCR_output, path_processed, DBengine):
-    """Dadas las rutas de entrada y salida, tomará todos los archivos PDF de path_input y los convertirá en textos
-    (ya sea mediante lectura común o mediante OCR), corregirá los textos, extraerá medidas de calidad y generará un
+    """Dadas las rutas de entrada y salida, tomarÃ¡ todos los archivos PDF de path_input y los convertirÃ¡ en textos
+    (ya sea mediante lectura comÃºn o mediante OCR), corregirÃ¡ los textos, extraerÃ¡ medidas de calidad y generarÃ¡ un
     .txt con el texto convertido guardado en una de las dos carpetas de output (path_output, path_OCR_output).
-    Esta función produce:
+    Esta funciÃ³n produce:
         (1)Un conjunto de archivos .txt almacenados en las carpetas de salida.
-        (2)Una lista global (prob_list) con la información de métricas de calidad y una etiqueta (label_low_quality).
+        (2)Una lista global (prob_list) con la informaciÃ³n de mÃ©tricas de calidad y una etiqueta (label_low_quality).
         (3) Un dataframe que indica si fue descargado (Dowload), cantidad de hojas (Npages) y
         tipo de procesamiento realizado (Type)"""
     start_time = time()
@@ -177,7 +177,7 @@ def PDF_read_from_path(path_input, path_image_output, path_output, path_OCR_outp
 
 #####Funciones para ocr_processing()
 def ocr_processing(path_to_pdf, path_image_output, path_OCR_output):
-    """Comienza el proceso de conversión por OCR y mide el tiempo que se tarda el proceso. Devolverá falso si el
+    """Comienza el proceso de conversiÃ³n por OCR y mide el tiempo que se tarda el proceso. DevolverÃ¡ falso si el
     proceso falla y verdadero si se ejecuta exitosamente"""
     print("* Processing OCR: " + path_to_pdf)
     start_time_ocr = time()
@@ -191,7 +191,7 @@ def ocr_processing(path_to_pdf, path_image_output, path_OCR_output):
         return False
 
 def remove_image(path_image):
-    """Dada una carpeta, eliminará todas las imágenes presentes en ellas (en realidad todos los archivos)"""
+    """Dada una carpeta, eliminarÃ¡ todas las imÃ¡genes presentes en ellas (en realidad todos los archivos)"""
     folder_image = path_image
     if not os.path.isdir(folder_image):
         os.makedirs(folder_image)
@@ -206,7 +206,7 @@ def thresholded_image(path_image):
     return image 
 
 def create_image(path_file_pdf, path_image_output, path_OCR_output):
-    """Esta función toma el PDF, crea imágenes, las convierte en texto, corrige dicho texto, cuenta la cantidad de
+    """Esta funciÃ³n toma el PDF, crea imÃ¡genes, las convierte en texto, corrige dicho texto, cuenta la cantidad de
     errores presentes, aplica una etiqueta de calidad y escribe el string resultante en un archivo .txt"""
     try:
         doc = fitz.open(path_file_pdf)
@@ -236,7 +236,7 @@ def create_image(path_file_pdf, path_image_output, path_OCR_output):
 #####Funciones para correct_text_n_words
 def correct_text_n_words(original_text, n_new_word, no_search):
     """Dado un texto, una lista de n palabras a corregir y un diccionario de excepciones, ejecutar por cada palabra a
-    corregir la función correct_text_one_word(). Devuelve el texto corregido"""
+    corregir la funciÃ³n correct_text_one_word(). Devuelve el texto corregido"""
     new_text = original_text
     for new_word in n_new_words:
         new_text = correct_text_one_word(new_text, new_word, no_search)
@@ -244,18 +244,18 @@ def correct_text_n_words(original_text, n_new_word, no_search):
 
 def correct_text_one_word(original_text, new_word, no_search):
     """Dado un texto, una palabra a corregir y un diccionario de excepciones genera un conjunto de posibles errores y
-    corrige esos errores con la función replace_options(). Devuelver el texto corrregido"""
-    option_set = options(new_word) #generación de opciones
+    corrige esos errores con la funciÃ³n replace_options(). Devuelver el texto corrregido"""
+    option_set = options(new_word) #generaciÃ³n de opciones
     option_set = avoid_search(option_set, no_search, new_word) #eliminar opciones no deseadas (por ejemplo, un match incorrecto con un singular)
     return replace_options(original_text, option_set, new_word)
 
 def options(word):
     """Dada una palabra, generar una serie de errores probables que incluyan todas las posibilidades en que hayan:
         (1) Hasta 4 espacios dentro de la palabra original.
-        (2) omisión de solo uno de los caracteres.
-        (3)transposición de un par de letras adyacentes.
+        (2) omisiÃ³n de solo uno de los caracteres.
+        (3)transposiciÃ³n de un par de letras adyacentes.
         (4)Todas las letras de la palabra separadas por un espacio.
-    La función devuelve un objeto tipo set con todas las posibilidades generadas"""
+    La funciÃ³n devuelve un objeto tipo set con todas las posibilidades generadas"""
     result = []    
     for i in range(1, len(word)): #ciclo for para generar divisiones y subdivisiones de hasta 4 espacios
         if len(word[:i])>=2:
@@ -282,19 +282,19 @@ def options(word):
 
 def split1(palabra):
     """Dada una palabra, generar una serie de errores probables que incluyan todas las posibilidades en que haya:
-    Un espacio separando a la palabra en 2 seccciones. La función devolverá un objeto tipo list con todas las
+    Un espacio separando a la palabra en 2 seccciones. La funciÃ³n devolverÃ¡ un objeto tipo list con todas las
     posibilidades generadas"""
     return [palabra[:i] + ' ' + palabra[i:] for i in range(1, len(palabra))].copy()
 
 def avoid_search(option_set, no_search, new_word):
-    """Dado un conjunto de opciones de errores, un diccionario de exclusiones y una palabra correcta, la función
-    devolverá un nuevo set que no contenga las exclusiones"""
+    """Dado un conjunto de opciones de errores, un diccionario de exclusiones y una palabra correcta, la funciÃ³n
+    devolverÃ¡ un nuevo set que no contenga las exclusiones"""
     return option_set - set(no_search.get(new_word, ['']))
 
 def replace_options(original_text, option_set, new_word):
-    """Dado un texto sin corregir, un conjunto de posibles errores y la palabra correcta esta función buscará
-    interativamente todos los posibles errores, si los encuentra ubicará la palabra correcta en ese espacio y
-    continuará la búsqueda. La función devuelve el texto corregido"""
+    """Dado un texto sin corregir, un conjunto de posibles errores y la palabra correcta esta funciÃ³n buscarÃ¡
+    interativamente todos los posibles errores, si los encuentra ubicarÃ¡ la palabra correcta en ese espacio y
+    continuarÃ¡ la bÃºsqueda. La funciÃ³n devuelve el texto corregido"""
     condition = '|'.join(option_set)
     condition = '([\W\n\r\t])(' + condition + ')([\W\n\r\t])'
     new_text = original_text
@@ -307,8 +307,8 @@ def replace_options(original_text, option_set, new_word):
     return new_text
 
 def new_word_by_condition(word, new_word):
-    """Dada una palabra incorrecta y una palabra correcta, esta función decididrá si la nueva palabra correcta debe
-    ser escrita en minúculas, mayúsculas o mayúscula inicial"""
+    """Dada una palabra incorrecta y una palabra correcta, esta funciÃ³n decididrÃ¡ si la nueva palabra correcta debe
+    ser escrita en minÃºculas, mayÃºsculas o mayÃºscula inicial"""
     total_len = sum(map(str.isalpha, word))
     if str.isupper(word[0]) and count_lower(word[1:]) == (total_len - 1):
         new_word = new_word[0].upper() + new_word[1:].lower()
@@ -319,23 +319,23 @@ def new_word_by_condition(word, new_word):
     return new_word
 
 def count_upper(word):
-    """Función que cuenta la cantidad de mayúsculas en un string de entrada"""
+    """FunciÃ³n que cuenta la cantidad de mayÃºsculas en un string de entrada"""
     return sum(map(str.isupper, word))
 
 def count_lower(word):
-    """Función que cuenta la cantidad de minúsculas en un string de entrada"""
+    """FunciÃ³n que cuenta la cantidad de minÃºsculas en un string de entrada"""
     return sum(map(str.islower, word))
 
 #####Funciones para prob_docs_errors_greater()
 def prob_docs_errors_greater(original_text, lambda_val, max_words):
-    """Dado un texto, una cantidad de errores esperados y una cantidad de palabras de un texto modelo, esta función
-    estima mediante la distribución de Poisson la probabilidad de encontrar un texto con esa cantidad de errores o más.
-    La función devuelve la probabilidad, la taza de error y una etiqueta de calidad del documento analizado"""
+    """Dado un texto, una cantidad de errores esperados y una cantidad de palabras de un texto modelo, esta funciÃ³n
+    estima mediante la distribuciÃ³n de Poisson la probabilidad de encontrar un texto con esa cantidad de errores o mÃ¡s.
+    La funciÃ³n devuelve la probabilidad, la taza de error y una etiqueta de calidad del documento analizado"""
     errors, total_words = doc_errors(original_text, False)
     total_errors = sum(errors.values())
     error_mapped = error_map_max(total_words, total_errors, max_words)
     prob = 1-poisson.cdf(error_mapped, lambda_val)
-    label_low_quality = get_label_low_quality(' ', original_text) ###modificación
+    label_low_quality = get_label_low_quality(' ', original_text) ###modificaciÃ³n
     if total_words != 0:
         error_ratio = total_errors/total_words
     else:
@@ -356,9 +356,9 @@ def error_map_max(doc_words, errors, max_words):
 
 #####Funciones para label_low_quality()
 
-def get_label_low_quality(filename, raw): ###modificación de la función completa
-    """Dado el nombre de un archivo(no es necesario) y un texto, tomar métricas de la calidad del documento y
-    alimentar a un modelo de Random Forest preentrenado para que determine si el documento está bien (y[0] == 0) o si
+def get_label_low_quality(filename, raw): ###modificaciÃ³n de la funciÃ³n completa
+    """Dado el nombre de un archivo(no es necesario) y un texto, tomar mÃ©tricas de la calidad del documento y
+    alimentar a un modelo de Random Forest preentrenado para que determine si el documento estÃ¡ bien (y[0] == 0) o si
     tiene baja calidad (y[0] == 1). Devuelve una etiqueta con valor 0 o 1 """
     x = metrics_errors(filename, raw)[1:] + metrics_esp_char(filename, raw)[1:]
     if x[0] != 0:
@@ -370,7 +370,7 @@ def get_label_low_quality(filename, raw): ###modificación de la función completa
     return y[0]
 
 def metrics_errors(filename, raw):
-    """Dado el nombre de un archivo(no es necesario) y un texto, tomar métricas de la calidad del documento. Devuelve
+    """Dado el nombre de un archivo(no es necesario) y un texto, tomar mÃ©tricas de la calidad del documento. Devuelve
     una lista con el nombre del archivo, cantidad de errores, de palabras y el ratio del error """
     errors, total_words = doc_errors(raw, False)
     if total_words != 0:
@@ -383,10 +383,10 @@ def metrics_errors(filename, raw):
     error_by_doc = sum(errors.values())
     return [filename, total_words, error_by_doc, error_ratio]
 
-##### métrica de caracteres especiales
+##### mÃ©trica de caracteres especiales
 def metrics_esp_char(filename, raw):
-    """Dado el nombre de un archivo(no es necesario) y un texto, tomar métricas de la calidad del documento. Devuelve
-    una lista con el nombre del archivo, cantidad de líneas, cantidad de letras, cantidad de espacios y de caracteres
+    """Dado el nombre de un archivo(no es necesario) y un texto, tomar mÃ©tricas de la calidad del documento. Devuelve
+    una lista con el nombre del archivo, cantidad de lÃ­neas, cantidad de letras, cantidad de espacios y de caracteres
     especiales """
     list_temp = []
     lines = raw.split('\r\n')
@@ -396,12 +396,12 @@ def metrics_esp_char(filename, raw):
     list_temp = [filename, len(lines), letters, spaces, special_character]
     return list_temp
 
-def character_special(raw): ###nueva función
+def character_special(raw): ###nueva funciÃ³n
     """cuenta la cantidad de caracteres especiales en un texto dado"""
     punctuations = '''!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'''
     return sum([v for k, v in Counter(raw).items() if k in punctuations])
 
-def split(word): ###nueva función
+def split(word): ###nueva funciÃ³n
     """Entrega una palabra sin incluir sus caracteres especiales"""
     punctuations = '''!()-[];:'"\,<>./?@#$%^*'''
     [char for char in word if char not in punctuations]
@@ -410,8 +410,8 @@ def split(word): ###nueva función
 
 #####Funciones para doc_errors()
 def doc_errors(raw, Verbose):
-    """Dado un texto de entrada y una serie de diccionarios cargados como variables globales, esta función detectará
-    palabras que no hagan parte de dichos diccionarios y determinará su frecuencia individual. Devuelve un
+    """Dado un texto de entrada y una serie de diccionarios cargados como variables globales, esta funciÃ³n detectarÃ¡
+    palabras que no hagan parte de dichos diccionarios y determinarÃ¡ su frecuencia individual. Devuelve un
     diccionario de errores y la cantidad de palabras en el documento """
     count_one_ocr = dict()
     tokens = word_tokenize(raw)
@@ -431,8 +431,8 @@ def doc_errors(raw, Verbose):
     return errors, count_words
 
 def file_to_dict(name):
-    """Esta función está creada para convertir archivos txt que contenga solo una columna en formato <<Palabra
-    Número>> y genere con ellos un diccionario donde la llave es Palabra y el valor del diccionario es Número """
+    """Esta funciÃ³n estÃ¡ creada para convertir archivos txt que contenga solo una columna en formato <<Palabra
+    NÃºmero>> y genere con ellos un diccionario donde la llave es Palabra y el valor del diccionario es NÃºmero """
     file  = open(name, 'r', encoding = 'UTF-8')
     count_urt = dict()
     for line in file:
@@ -443,18 +443,18 @@ def file_to_dict(name):
     return count_urt
 
 def load_gen_pkl(ruta):
-    """Esta función permite leer cualquier archivo pkl a partir de la ruta con el nombre del archivo"""
+    """Esta funciÃ³n permite leer cualquier archivo pkl a partir de la ruta con el nombre del archivo"""
     pkl_file = open(ruta, 'rb')
     file = pickle.load(pkl_file)
     pkl_file.close()
     return file
 
-### Ejecución principal
+### EjecuciÃ³n principal
 
 scaler2, model4_RF = load_gen_pkl(path_input + '/' + file_in_model) ###agregado
 
 # conecta con base de datos
-engine = create_engine('postgresql://postgres:LFnnLUQZQMJ9@db-test2.cxqola6hllvk.us-east-2.rds.amazonaws.com/t96_dev')
+engine = create_engine('YOUR_CONNECTION_STRING')
 
 #####Variables para doc_errors()
 spell = SpellChecker(language = 'es')
@@ -465,10 +465,10 @@ count_no_error = load_gen_pkl(path_input + '/' + file_in_no_error)
 # Lectura del PDF
 PDF_read_from_path(path_input_pdf, path_tmp_image, path_output_txt, path_output_ocr, path_done_data, engine)
 
-# Generacion df de métricas de calidad
+# Generacion df de mÃ©tricas de calidad
 metrics_df = pd.DataFrame(prob_list, columns = ['key', 'probability', 'error_ratio', 'low_quality'])
 
-# Inserta en base de datos lo relacionado a las métricas
+# Inserta en base de datos lo relacionado a las mÃ©tricas
 if not metrics_df.empty: 
     db_tosql = metrics_df.copy()
     db_tosql.to_sql('tt_carga_pdf', engine, if_exists='append', index=False)
