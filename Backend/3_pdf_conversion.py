@@ -1,56 +1,51 @@
 #!/usr/bin/python
 # -*- coding: latin-1 -*-
 
-### importacion de librer√≠as
+### importacion de librerÌas
 
-#####Librer√≠as para ocr_processing()
+#####LibrerÌas para ocr_processing()
+import common as t96
 from tika import parser
 from time import time
 import os
 from os import listdir
 import fitz
-import glob
 import pytesseract
-from PIL import Image
 import cv2
 from sqlalchemy import create_engine
 
-#####Librer√≠as para correct_text_n_words
+#####LibrerÌas para correct_text_n_words
 import re 
 
-#####librer√≠as para prob_docs_errors_greater()
+#####librerÌas para prob_docs_errors_greater()
 import numpy as np
 from scipy.stats import poisson
 import pandas as pd
 
-#####librer√≠as para doc_errors
+#####librerÌas para doc_errors
 import unidecode
 from spellchecker import  SpellChecker
 import pickle
-from symspellpy import SymSpell, Verbosity
 from nltk.tokenize import word_tokenize
 from collections import Counter
 
 ### variables globales
+path_input = t96.path_in_static_data
+path_input_pdf = t96.path_tmp_pdf
+path_tmp_image = t96.path_tmp_image
+path_output_txt = t96.path_tmp_txt
+path_output_ocr = t96.path_tmp_ocr
+path_done_data = t96.path_out_done_pdf
 
-#####Variables para ocr_processing()
-path_input = "data"
-path_input_pdf = "tmp/data"
-path_tmp_image = "tmp/image"
-path_output_txt = "tmp/text"
-path_output_ocr = "tmp/ocr"
-path_done_data = "done/data"
-
-file_in_model = "model4_RF.pkl"
-file_in_count = 'count_urt_v2_cleaned.txt'
-file_in_es = 'es-100l_v2.txt'
-file_in_no_error = 'no_error.pkl'
+file_in_model = t96.file_in_model
+file_in_count = t96.file_in_count
+file_in_es = t96.file_in_es
+file_in_no_error = t96.file_in_no_error
 
 ocr = []
 failed = []
 
-#pytesseract.pytesseract.tesseract_cmd = r"/usr/bin/tesseract"
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = t96.path_driver_ts
 
 #####Variables para correct_text_n_words
 no_search = {'ANTECEDENTES': ['ANTECEDENTE '],
@@ -112,20 +107,20 @@ prob_list = []
 # Funciones
 
 def update_converted_document(DBengine, file_id, conv_status, file_type, n_pages):
-    """Esta funci√≥n actualiza los estados, tipos y n√∫mero de p√°ginas de las sentencias en la base de datos,
-    coloc√°dolas como corresponden seg√∫n los par√°metros enviados """
+    """Esta funciÛn actualiza los estados, tipos y n˙mero de p·ginas de las sentencias en la base de datos,
+    coloc·dolas como corresponden seg˙n los par·metros enviados """
     strSQL = "update mt_sentencia set estado = '" + str(conv_status) + "', tipo_archivo = '" + str(file_type)
     strSQL = strSQL + "', paginas = '" + str(n_pages) + "' where certificado = '" + str(file_id) + "'"
     DBengine.execute(strSQL)
 
-#####Funci√≥n PDF_read_from_path() -- lectura de los PDF de una ruta
+#####FunciÛn PDF_read_from_path() -- lectura de los PDF de una ruta
 def PDF_read_from_path(path_input, path_image_output, path_output, path_OCR_output, path_processed, DBengine):
-    """Dadas las rutas de entrada y salida, tomar√° todos los archivos PDF de path_input y los convertir√° en textos
-    (ya sea mediante lectura com√∫n o mediante OCR), corregir√° los textos, extraer√° medidas de calidad y generar√° un
+    """Dadas las rutas de entrada y salida, tomar· todos los archivos PDF de path_input y los convertir· en textos
+    (ya sea mediante lectura com˙n o mediante OCR), corregir· los textos, extraer· medidas de calidad y generar· un
     .txt con el texto convertido guardado en una de las dos carpetas de output (path_output, path_OCR_output).
-    Esta funci√≥n produce:
-        (1)Un conjunto de archivos .txt almacenados en las carpetas de salida.
-        (2)Una lista global (prob_list) con la informaci√≥n de m√©tricas de calidad y una etiqueta (label_low_quality).
+    Esta funciÛn produce:
+        (1) Un conjunto de archivos .txt almacenados en las carpetas de salida.
+        (2) Una lista global (prob_list) con la informaciÛn de mÈtricas de calidad y una etiqueta (label_low_quality).
         (3) Un dataframe que indica si fue descargado (Dowload), cantidad de hojas (Npages) y
         tipo de procesamiento realizado (Type)"""
     start_time = time()
@@ -170,14 +165,14 @@ def PDF_read_from_path(path_input, path_image_output, path_output, path_OCR_outp
             print("Processing: Data File not is PDF ", stem, ext)
             df_content.loc[index] = (stem,"No",None,"No PDF", 'No convertido')
         update_converted_document(DBengine, stem, df_content.loc[index]["Status"], df_content.loc[index]["Type"], df_content.loc[index]["Npages"])
-        os.rename(path_input + "/" + file, path_processed + "/" + file)
+        os.rename(path_input + file, path_processed + file)
 
     elapsed_time = time() - start_time
     print("Elapsed time TOTAL Processing: %0.10f seconds." % elapsed_time)
 
 #####Funciones para ocr_processing()
 def ocr_processing(path_to_pdf, path_image_output, path_OCR_output):
-    """Comienza el proceso de conversi√≥n por OCR y mide el tiempo que se tarda el proceso. Devolver√° falso si el
+    """Comienza el proceso de conversiÛn por OCR y mide el tiempo que se tarda el proceso. Devolver· falso si el
     proceso falla y verdadero si se ejecuta exitosamente"""
     print("* Processing OCR: " + path_to_pdf)
     start_time_ocr = time()
@@ -191,7 +186,7 @@ def ocr_processing(path_to_pdf, path_image_output, path_OCR_output):
         return False
 
 def remove_image(path_image):
-    """Dada una carpeta, eliminar√° todas las im√°genes presentes en ellas (en realidad todos los archivos)"""
+    """Dada una carpeta, eliminar· todas las im·genes presentes en ellas (en realidad todos los archivos)"""
     folder_image = path_image
     if not os.path.isdir(folder_image):
         os.makedirs(folder_image)
@@ -206,7 +201,7 @@ def thresholded_image(path_image):
     return image 
 
 def create_image(path_file_pdf, path_image_output, path_OCR_output):
-    """Esta funci√≥n toma el PDF, crea im√°genes, las convierte en texto, corrige dicho texto, cuenta la cantidad de
+    """Esta funciÛn toma el PDF, crea im·genes, las convierte en texto, corrige dicho texto, cuenta la cantidad de
     errores presentes, aplica una etiqueta de calidad y escribe el string resultante en un archivo .txt"""
     try:
         doc = fitz.open(path_file_pdf)
@@ -236,7 +231,7 @@ def create_image(path_file_pdf, path_image_output, path_OCR_output):
 #####Funciones para correct_text_n_words
 def correct_text_n_words(original_text, n_new_word, no_search):
     """Dado un texto, una lista de n palabras a corregir y un diccionario de excepciones, ejecutar por cada palabra a
-    corregir la funci√≥n correct_text_one_word(). Devuelve el texto corregido"""
+    corregir la funciÛn correct_text_one_word(). Devuelve el texto corregido"""
     new_text = original_text
     for new_word in n_new_words:
         new_text = correct_text_one_word(new_text, new_word, no_search)
@@ -244,18 +239,18 @@ def correct_text_n_words(original_text, n_new_word, no_search):
 
 def correct_text_one_word(original_text, new_word, no_search):
     """Dado un texto, una palabra a corregir y un diccionario de excepciones genera un conjunto de posibles errores y
-    corrige esos errores con la funci√≥n replace_options(). Devuelver el texto corrregido"""
-    option_set = options(new_word) #generaci√≥n de opciones
+    corrige esos errores con la funciÛn replace_options(). Devuelver el texto corrregido"""
+    option_set = options(new_word) #generaciÛn de opciones
     option_set = avoid_search(option_set, no_search, new_word) #eliminar opciones no deseadas (por ejemplo, un match incorrecto con un singular)
     return replace_options(original_text, option_set, new_word)
 
 def options(word):
     """Dada una palabra, generar una serie de errores probables que incluyan todas las posibilidades en que hayan:
         (1) Hasta 4 espacios dentro de la palabra original.
-        (2) omisi√≥n de solo uno de los caracteres.
-        (3)transposici√≥n de un par de letras adyacentes.
+        (2) omisiÛn de solo uno de los caracteres.
+        (3)transposiciÛn de un par de letras adyacentes.
         (4)Todas las letras de la palabra separadas por un espacio.
-    La funci√≥n devuelve un objeto tipo set con todas las posibilidades generadas"""
+    La funciÛn devuelve un objeto tipo set con todas las posibilidades generadas"""
     result = []    
     for i in range(1, len(word)): #ciclo for para generar divisiones y subdivisiones de hasta 4 espacios
         if len(word[:i])>=2:
@@ -282,19 +277,19 @@ def options(word):
 
 def split1(palabra):
     """Dada una palabra, generar una serie de errores probables que incluyan todas las posibilidades en que haya:
-    Un espacio separando a la palabra en 2 seccciones. La funci√≥n devolver√° un objeto tipo list con todas las
+    Un espacio separando a la palabra en 2 seccciones. La funciÛn devolver· un objeto tipo list con todas las
     posibilidades generadas"""
     return [palabra[:i] + ' ' + palabra[i:] for i in range(1, len(palabra))].copy()
 
 def avoid_search(option_set, no_search, new_word):
-    """Dado un conjunto de opciones de errores, un diccionario de exclusiones y una palabra correcta, la funci√≥n
-    devolver√° un nuevo set que no contenga las exclusiones"""
+    """Dado un conjunto de opciones de errores, un diccionario de exclusiones y una palabra correcta, la funciÛn
+    devolver· un nuevo set que no contenga las exclusiones"""
     return option_set - set(no_search.get(new_word, ['']))
 
 def replace_options(original_text, option_set, new_word):
-    """Dado un texto sin corregir, un conjunto de posibles errores y la palabra correcta esta funci√≥n buscar√°
-    interativamente todos los posibles errores, si los encuentra ubicar√° la palabra correcta en ese espacio y
-    continuar√° la b√∫squeda. La funci√≥n devuelve el texto corregido"""
+    """Dado un texto sin corregir, un conjunto de posibles errores y la palabra correcta esta funciÛn buscar·
+    interativamente todos los posibles errores, si los encuentra ubicar· la palabra correcta en ese espacio y
+    continuar· la b˙squeda. La funciÛn devuelve el texto corregido"""
     condition = '|'.join(option_set)
     condition = '([\W\n\r\t])(' + condition + ')([\W\n\r\t])'
     new_text = original_text
@@ -307,8 +302,8 @@ def replace_options(original_text, option_set, new_word):
     return new_text
 
 def new_word_by_condition(word, new_word):
-    """Dada una palabra incorrecta y una palabra correcta, esta funci√≥n decididr√° si la nueva palabra correcta debe
-    ser escrita en min√∫culas, may√∫sculas o may√∫scula inicial"""
+    """Dada una palabra incorrecta y una palabra correcta, esta funciÛn decididr· si la nueva palabra correcta debe
+    ser escrita en min˙culas, may˙sculas o may˙scula inicial"""
     total_len = sum(map(str.isalpha, word))
     if str.isupper(word[0]) and count_lower(word[1:]) == (total_len - 1):
         new_word = new_word[0].upper() + new_word[1:].lower()
@@ -319,23 +314,23 @@ def new_word_by_condition(word, new_word):
     return new_word
 
 def count_upper(word):
-    """Funci√≥n que cuenta la cantidad de may√∫sculas en un string de entrada"""
+    """FunciÛn que cuenta la cantidad de may˙sculas en un string de entrada"""
     return sum(map(str.isupper, word))
 
 def count_lower(word):
-    """Funci√≥n que cuenta la cantidad de min√∫sculas en un string de entrada"""
+    """FunciÛn que cuenta la cantidad de min˙sculas en un string de entrada"""
     return sum(map(str.islower, word))
 
 #####Funciones para prob_docs_errors_greater()
 def prob_docs_errors_greater(original_text, lambda_val, max_words):
-    """Dado un texto, una cantidad de errores esperados y una cantidad de palabras de un texto modelo, esta funci√≥n
-    estima mediante la distribuci√≥n de Poisson la probabilidad de encontrar un texto con esa cantidad de errores o m√°s.
-    La funci√≥n devuelve la probabilidad, la taza de error y una etiqueta de calidad del documento analizado"""
+    """Dado un texto, una cantidad de errores esperados y una cantidad de palabras de un texto modelo, esta funciÛn
+    estima mediante la distribuciÛn de Poisson la probabilidad de encontrar un texto con esa cantidad de errores o m·s.
+    La funciÛn devuelve la probabilidad, la taza de error y una etiqueta de calidad del documento analizado"""
     errors, total_words = doc_errors(original_text, False)
     total_errors = sum(errors.values())
     error_mapped = error_map_max(total_words, total_errors, max_words)
     prob = 1-poisson.cdf(error_mapped, lambda_val)
-    label_low_quality = get_label_low_quality(' ', original_text) ###modificaci√≥n
+    label_low_quality = get_label_low_quality(' ', original_text) ###modificaciÛn
     if total_words != 0:
         error_ratio = total_errors/total_words
     else:
@@ -356,9 +351,9 @@ def error_map_max(doc_words, errors, max_words):
 
 #####Funciones para label_low_quality()
 
-def get_label_low_quality(filename, raw): ###modificaci√≥n de la funci√≥n completa
-    """Dado el nombre de un archivo(no es necesario) y un texto, tomar m√©tricas de la calidad del documento y
-    alimentar a un modelo de Random Forest preentrenado para que determine si el documento est√° bien (y[0] == 0) o si
+def get_label_low_quality(filename, raw): ###modificaciÛn de la funciÛn completa
+    """Dado el nombre de un archivo(no es necesario) y un texto, tomar mÈtricas de la calidad del documento y
+    alimentar a un modelo de Random Forest preentrenado para que determine si el documento est· bien (y[0] == 0) o si
     tiene baja calidad (y[0] == 1). Devuelve una etiqueta con valor 0 o 1 """
     x = metrics_errors(filename, raw)[1:] + metrics_esp_char(filename, raw)[1:]
     if x[0] != 0:
@@ -370,7 +365,7 @@ def get_label_low_quality(filename, raw): ###modificaci√≥n de la funci√≥n comple
     return y[0]
 
 def metrics_errors(filename, raw):
-    """Dado el nombre de un archivo(no es necesario) y un texto, tomar m√©tricas de la calidad del documento. Devuelve
+    """Dado el nombre de un archivo(no es necesario) y un texto, tomar mÈtricas de la calidad del documento. Devuelve
     una lista con el nombre del archivo, cantidad de errores, de palabras y el ratio del error """
     errors, total_words = doc_errors(raw, False)
     if total_words != 0:
@@ -383,10 +378,10 @@ def metrics_errors(filename, raw):
     error_by_doc = sum(errors.values())
     return [filename, total_words, error_by_doc, error_ratio]
 
-##### m√©trica de caracteres especiales
+##### mÈtrica de caracteres especiales
 def metrics_esp_char(filename, raw):
-    """Dado el nombre de un archivo(no es necesario) y un texto, tomar m√©tricas de la calidad del documento. Devuelve
-    una lista con el nombre del archivo, cantidad de l√≠neas, cantidad de letras, cantidad de espacios y de caracteres
+    """Dado el nombre de un archivo(no es necesario) y un texto, tomar mÈtricas de la calidad del documento. Devuelve
+    una lista con el nombre del archivo, cantidad de lÌneas, cantidad de letras, cantidad de espacios y de caracteres
     especiales """
     list_temp = []
     lines = raw.split('\r\n')
@@ -396,12 +391,12 @@ def metrics_esp_char(filename, raw):
     list_temp = [filename, len(lines), letters, spaces, special_character]
     return list_temp
 
-def character_special(raw): ###nueva funci√≥n
+def character_special(raw): ###nueva funciÛn
     """cuenta la cantidad de caracteres especiales en un texto dado"""
     punctuations = '''!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'''
     return sum([v for k, v in Counter(raw).items() if k in punctuations])
 
-def split(word): ###nueva funci√≥n
+def split(word): ###nueva funciÛn
     """Entrega una palabra sin incluir sus caracteres especiales"""
     punctuations = '''!()-[];:'"\,<>./?@#$%^*'''
     [char for char in word if char not in punctuations]
@@ -410,8 +405,8 @@ def split(word): ###nueva funci√≥n
 
 #####Funciones para doc_errors()
 def doc_errors(raw, Verbose):
-    """Dado un texto de entrada y una serie de diccionarios cargados como variables globales, esta funci√≥n detectar√°
-    palabras que no hagan parte de dichos diccionarios y determinar√° su frecuencia individual. Devuelve un
+    """Dado un texto de entrada y una serie de diccionarios cargados como variables globales, esta funciÛn detectar·
+    palabras que no hagan parte de dichos diccionarios y determinar· su frecuencia individual. Devuelve un
     diccionario de errores y la cantidad de palabras en el documento """
     count_one_ocr = dict()
     tokens = word_tokenize(raw)
@@ -431,8 +426,8 @@ def doc_errors(raw, Verbose):
     return errors, count_words
 
 def file_to_dict(name):
-    """Esta funci√≥n est√° creada para convertir archivos txt que contenga solo una columna en formato <<Palabra
-    N√∫mero>> y genere con ellos un diccionario donde la llave es Palabra y el valor del diccionario es N√∫mero """
+    """Esta funciÛn est· creada para convertir archivos txt que contenga solo una columna en formato <<Palabra
+    N˙mero>> y genere con ellos un diccionario donde la llave es Palabra y el valor del diccionario es N˙mero """
     file  = open(name, 'r', encoding = 'UTF-8')
     count_urt = dict()
     for line in file:
@@ -443,32 +438,33 @@ def file_to_dict(name):
     return count_urt
 
 def load_gen_pkl(ruta):
-    """Esta funci√≥n permite leer cualquier archivo pkl a partir de la ruta con el nombre del archivo"""
+    """Esta funciÛn permite leer cualquier archivo pkl a partir de la ruta con el nombre del archivo"""
     pkl_file = open(ruta, 'rb')
     file = pickle.load(pkl_file)
     pkl_file.close()
     return file
 
-### Ejecuci√≥n principal
-
-scaler2, model4_RF = load_gen_pkl(path_input + '/' + file_in_model) ###agregado
+### EjecuciÛn principal
+scaler2, model4_RF = load_gen_pkl(path_input + file_in_model) ###agregado
 
 # conecta con base de datos
-engine = create_engine('YOUR_CONNECTION_STRING')
+engine = create_engine(t96.sqlConnString)
+engine.execute("insert into tt_log_transaccion (operacion, comentario) values ('Conversion','Inicia proceso')")
 
 #####Variables para doc_errors()
 spell = SpellChecker(language = 'es')
-count_urt = file_to_dict(path_input + '/' + file_in_count)
-count_symspell = file_to_dict(path_input + '/' + file_in_es)
-count_no_error = load_gen_pkl(path_input + '/' + file_in_no_error)
+count_urt = file_to_dict(path_input + file_in_count)
+count_symspell = file_to_dict(path_input + file_in_es)
+count_no_error = load_gen_pkl(path_input + file_in_no_error)
 
 # Lectura del PDF
 PDF_read_from_path(path_input_pdf, path_tmp_image, path_output_txt, path_output_ocr, path_done_data, engine)
 
-# Generacion df de m√©tricas de calidad
+# Generacion df de mÈtricas de calidad
 metrics_df = pd.DataFrame(prob_list, columns = ['key', 'probability', 'error_ratio', 'low_quality'])
 
-# Inserta en base de datos lo relacionado a las m√©tricas
+# Inserta en base de datos lo relacionado a las mÈtricas
 if not metrics_df.empty: 
     db_tosql = metrics_df.copy()
     db_tosql.to_sql('tt_carga_pdf', engine, if_exists='append', index=False)
+engine.execute("insert into tt_log_transaccion (operacion, comentario) values ('Conversion','Fin proceso')")

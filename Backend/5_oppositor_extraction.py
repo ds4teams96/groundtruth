@@ -13,10 +13,11 @@ EXTRACTION OF RELEVANT INFORMATION:
 '''
 ##################################################################################################
 
-import numpy as np
 #########################
 ###     LIBRARIES     ###
 #########################
+import common as t96
+import numpy as np
 import pandas as pd
 import seaborn as sns;
 
@@ -34,11 +35,9 @@ from sqlalchemy import create_engine
 ### GLOBAL VARIABLES ####
 #########################
 
-path_input = 'data'
-path_input_txt = 'tmp/text'
-path_input_ocr = 'tmp/ocr'
-
-file_despachos = 'Despachos.csv.csv'
+path_input = t96.path_in_static_data[:-1]
+path_input_txt = t96.path_tmp_txt[:-1]
+path_input_ocr = t96.path_tmp_ocr[:-1]
 
 file_ids_text = ".*.txt"
 file_ids_ocr = ".*.txt"
@@ -334,7 +333,7 @@ def extrae_magister(n, corpus_temp, black_list_temp):
     key_words2=list_concordances_ltc(key_magister2)
 
     file=corpus_temp.fileids()[n]
-    lines = corpus_temp.raw(file).split('\r\n')
+    lines = corpus_temp.raw(file).splitlines()
     llave_sentencia=file.replace(".txt", "")
     list_juez_text=[]
     list_juez_index=[]
@@ -431,7 +430,7 @@ def extrae_opositor(n, corpus_temp, black_list_temp):
     key_words2=list_concordances_ltc(key_opositor2)
     
     file=corpus_temp.fileids()[n]
-    lines = corpus_temp.raw(file).split('\r\n')
+    lines = corpus_temp.raw(file).splitlines()
     llave_sentencia=file.replace(".txt", "")
     
     # Validate high court
@@ -528,7 +527,7 @@ def extrae_area(n, corpus_temp, black_list_temp):
 
     file=corpus_temp.fileids()[n]
     raw_data=corpus_temp.raw(file)
-    lines = corpus_temp.raw(file).split('\r\n')
+    lines = corpus_temp.raw(file).splitlines()
     llave_sentencia=file.replace(".txt", "")
 
     prob_prhases=search_area(raw_data,key_words)
@@ -564,7 +563,7 @@ def extrae_tipo_doc(n, corpus_temp, black_list_temp):
 
     file=corpus_temp.fileids()[n]
     raw_data=corpus_temp.raw(file)
-    lines = corpus_temp.raw(file).split('\r\n')
+    lines = corpus_temp.raw(file).splitlines()
     llave_sentencia=file.replace(".txt", "")
 
     verifica_tribunal=[]
@@ -596,7 +595,7 @@ def extrae_tipo_doc(n, corpus_temp, black_list_temp):
         if init<end:
             for line in list(range(init,end)):
                 for key in valid_description:
-                    sentence=corpus_temp.raw(file).split('\r\n')[line] 
+                    sentence=corpus_temp.raw(file).splitlines()[line]
                     match=re.search(rf"{key}",sentence.lower())
                     if match != None: 
                         description_doc.append(sentence)
@@ -641,7 +640,8 @@ black_list_area=list_concordances_ltc(black_list_area)
 ########################
 ###  RDS connection  ###
 ########################
-engine = create_engine('YOUR CONNECTION STRING')
+engine = create_engine(t96.sqlConnString)
+engine.execute("insert into tt_log_transaccion (operacion, comentario) values ('Extracion opositor','Inicia proceso')")
 
 # Insert extraction in data base
 for n in range(0,len(ids)):
@@ -744,3 +744,5 @@ for n in range(0,len(ids_ocr)):
             db_tosql = df_encabezado.copy()
             db_tosql.columns = ["key", "clase", "descripcion", "fecha", "fecha_formato"]
             db_tosql.to_sql('tt_encabezado', engine, if_exists='append', index=False)
+
+engine.execute("insert into tt_log_transaccion (operacion, comentario) values ('Extracion opositor','Fin proceso')")

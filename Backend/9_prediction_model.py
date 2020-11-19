@@ -2,6 +2,7 @@
 # -*- coding: latin-1 -*-
 
 ### LOAD LIBRARIES
+import common as t96
 import pandas as pd
 import re
 import string
@@ -15,9 +16,7 @@ from tqdm import tqdm
 from sqlalchemy import create_engine
 
 ### GLOBAL VARIABLES
-path_data = 'tmp/output'
-path_out_model = 'data'
-file_in_resuelve = "resuelve.csv"
+path_out_model = t96.path_in_static_data[:-1]
 
 ### LOAD MODELS
 with open(path_out_model + '/' + 'ModelOrdenVivienda.pkl', 'rb') as file:
@@ -63,18 +62,21 @@ with open(path_out_model + '/' + 'ModelCatastro.pkl', 'rb') as file:
 ### EXECUTION
 
 ### LOAD DATA
-engine = create_engine('YOUR CONNECTION STRING')
+engine = create_engine(t96.sqlConnString)
+engine.execute("insert into tt_log_transaccion (operacion, comentario) values ('Modelo de prediccion','Inicia proceso')")
+
 DF = pd.read_sql("SELECT * from vw_pendiente_modelo", engine.connect())
-resuelve_O = pd.read_csv(path_data + '/' + file_in_resuelve)
 resuelve_e = DF
+
+resuelve_O = pd.read_sql("select * from tt_resuelve where certificado not in (select certificado from vw_pendiente_modelo) and usa_modelo = 'NO'", engine.connect())
 resuelve_O['key_temp'] = resuelve_O['certificado']+resuelve_O['radicado']
 
 stopwords_spanish = stopwords.words('spanish')
 resuelve_e['RE'] = ''
 for r in tqdm(range(len(resuelve_e))):
     text_temp = resuelve_e['resuelve'][r]
-    text_temp = re.sub(r'C.C.', r'CÃ‰DULA', text_temp)
-    text_temp = re.sub(r'No.', r'NÃšMERO', text_temp)
+    text_temp = re.sub(r'C.C.', r'CÉDULA', text_temp)
+    text_temp = re.sub(r'No.', r'NÚMERO', text_temp)
     text_temp = sent_tokenize(text_temp.lower())
     text_temp2 = []
     for sentence in range(len(text_temp)):
@@ -90,9 +92,9 @@ for r in tqdm(range(len(resuelve_e))):
 
 resuelve_O['RE'] = ''
 for r in tqdm(range(len(resuelve_O))):
-    text_temp = resuelve_O['Resuelve'][r]
-    text_temp = re.sub(r'C.C.', r'CÃ‰DULA', text_temp)
-    text_temp = re.sub(r'No.', r'NÃšMERO', text_temp)
+    text_temp = resuelve_O['resuelve'][r].lower()
+    text_temp = re.sub(r'C.C.', r'CÉDULA', text_temp)
+    text_temp = re.sub(r'No.', r'NÚMERO', text_temp)
     text_temp = sent_tokenize(text_temp.lower())
     text_temp2 = []
     for sentence in range(len(text_temp)):
@@ -161,8 +163,15 @@ resuelve_e = resuelve_e.drop('RE', axis=1)
 resuelve_e = resuelve_e.drop('key_temp', axis=1)
 resuelve_e['usa_modelo'] = 'SI'
 
-strSQLDelete = "delete from tt_resuelve tr where certificado in (select certificado from vw_pendiente_modelo)"
-engine.execute(strSQLDelete)
+
 if not resuelve_e.empty:
+    db_tosql = resuelve_e[['certificado']].copy()
+    db_tosql.to_sql('temp_new_resuelve', engine, if_exists='replace', index=False)
+
+    strSQLDelete = "delete from tt_resuelve tr where certificado in (select certificado from temp_new_resuelve)"
+    engine.execute(strSQLDelete)
+
     db_tosql = resuelve_e.copy()
     db_tosql.to_sql('tt_resuelve', engine, if_exists='append', index=False)
+
+engine.execute("insert into tt_log_transaccion (operacion, comentario) values ('Modelo de prediccion','Fin proceso')")

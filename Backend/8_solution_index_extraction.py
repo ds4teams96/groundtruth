@@ -1,26 +1,13 @@
 #!/usr/bin/python
 # -*- coding: latin-1 -*-
 
-### importacion de librerÃ­as
-
+### importacion de librerías
+import common as t96
 import os
-import gzip
-import json
-import string
 import re
 import numpy as np 
-from statistics import mean
 
-import nltk # imports the natural language toolkit
-import pandas as pd
-import plotly
-
-from collections import Counter
-from datetime import datetime
-from sklearn.feature_extraction.text import CountVectorizer
-from nltk import sent_tokenize
 from nltk.tokenize import RegexpTokenizer
-from nltk.tokenize import word_tokenize
 
 import unicodedata
 
@@ -59,10 +46,10 @@ dict_translate_enum_numero = {}
 for i in range(0,999):
     dict_translate_enum_numero[str(i)] = i
 
-path_in_txt = 'tmp/text/'
-path_in_ocr = 'tmp/ocr/'
-path_done_ocr = "done/ocr/"
-path_done_txt = "done/text/"
+path_in_txt = t96.path_tmp_txt
+path_in_ocr = t96.path_tmp_ocr
+path_done_ocr = t96.path_out_done_ocr
+path_done_txt = t96.path_out_done_txt
 
 n_max_sublevels = 2
 
@@ -72,11 +59,11 @@ n_max_sublevels = 2
 def clean_sentence_list(orig_sent_list):
     clean_list = []
     for sent_element in orig_sent_list:
-        temp_sent = sent_element.replace("â€¦","")
+        temp_sent = sent_element.replace("…","")
         temp_sent = temp_sent.upper()
-        # Eliminar tildes y caracteres como Ã± o tilde hacia atras (normalizaciÃ³n )
+        # Eliminar tildes y caracteres como ñ o tilde hacia atras (normalización )
         # https://es.stackoverflow.com/questions/135707/c%C3%B3mo-puedo-reemplazar-las-letras-con-tildes-por-las-mismas-sin-tilde-pero-no-l
-        # -> NFD y eliminar diacrÃ­ticos
+        # -> NFD y eliminar diacríticos
         temp_sent = unicodedata.normalize("NFKD", temp_sent).encode("ascii","ignore").decode("ascii")
         temp_sent.replace("-"," ")
         clean_list.append(temp_sent)
@@ -188,7 +175,7 @@ def pre_filter_items_resuelve(list_files, path_files='', b_debug=False):
             for sentence in l1_clean:
                 int_replace = 0
                 sent_orig = sentence
-                sentence = re.sub('[\s\)\|\:\Â¡\!\/]*$','',sentence)
+                sentence = re.sub('[\s\)\|\:\¡\!\/]*$','',sentence)
                 sentence = re.sub('^([B-NP-XZ0]{1}\s)?','',sentence).strip()
                 
                 if sentence in dict_texto_capitulo:
@@ -225,7 +212,7 @@ def pre_filter_items_resuelve(list_files, path_files='', b_debug=False):
                     if int_replace==1:
                         tran_list[0][2] = 'NC' # Numero Romano
                     if int_replace==2:
-                        tran_list[0][2] = 'NX' # NumeraciÃ³n con letras
+                        tran_list[0][2] = 'NX' # Numeración con letras
                     if b_debug: print("------POST:", tran_list, text_line, tran_list[-1:][0][0])
 
                     if item_num!='':
@@ -233,10 +220,13 @@ def pre_filter_items_resuelve(list_files, path_files='', b_debug=False):
                         if arr_text[0].strip()!="" and tran_list[-1:][0][0]!='NS':
                             token_line = l1_clean.index(sent_orig)
                             if b_debug: print("'" + sentence + "'")
-                            real_line = l1_clean_orig[max(0,token_line-1):].index(sent_orig.strip()) + max(0,token_line-1) + 1
+                            try:
+                                real_line = l1_clean_orig[max(0,token_line-1):].index(sent_orig.strip()) + max(0,token_line-1) + 1
+                            except:
+                                real_line = real_line + 1
                             if b_debug: print("Buscando: '", sentence, "' desde ", token_line, " = ", real_line)
                             # busca si es un dividor de capitulos
-                            if re.sub('[\s\)\|\:\Â¡\!\/]*$','',arr_text[0][0:70]).strip() in dict_texto_capitulo:
+                            if re.sub('[\s\)\|\:\¡\!\/]*$','',arr_text[0][0:70]).strip() in dict_texto_capitulo:
                                 token_line = l1_clean.index(sent_orig)
                                 real_line = l1_clean_orig[max(0,token_line-1):].index(sent_orig.strip()) + max(0,token_line-1) + 1
                                 if b_debug: print("Buscando: '", sentence, "' desde ", token_line, " = ", real_line)
@@ -270,7 +260,7 @@ def confirm_next_item(actual_item, actual_style, new_item, new_style):
     b_identico = True
     b_mismo_estilo = True
     delta_nivel = 0
-    while b_identico and kid<al and kid<nl: #si hay mÃ¡s elementos
+    while b_identico and kid<al and kid<nl: #si hay más elementos
         delta_nivel = int(new_item[kid]) - int(actual_item[kid])
         if new_style[kid]!='' and actual_style[kid]!='' and new_style[kid]!=actual_style[kid]: # si tienen el mismo valor o formato
             b_identico = False
@@ -334,6 +324,8 @@ def print_index_file(final_index, n_level=3):
 
 def save_index_file(final_index, DBengine, n_level=3, sType='Completo'):
     if len(final_index)!=0:
+        strSQLDelete = "delete from tt_indice_sentencia where key = '" + str(final_index[0][0].split('.')[0]) + "'"
+        DBengine.execute(strSQLDelete)
         for item in final_index:
             titulo = re.sub('[^\d\w\.\:\s\-]*\n*', '', item[2]).strip()
             numeral = '.'.join([str(i) for i in item[3] if i!=0])
@@ -362,7 +354,7 @@ def generate_index_file_resuelve(option_list, q_sublevels=5, n_level_id=[], styl
             file_name, file_line, line_text, item_num, style_list = line[0], line[1], line[2], line[3], line[4]
                 
             if b_debug: print(ident, "BP30: ", item_num, " : ", line_text, style_list)
-            if item_num==0 and len(option_list)>1: # si no tiene item (posible capitulo) y hay mÃ¡s de 1 en la lista, lo deja al final
+            if item_num==0 and len(option_list)>1: # si no tiene item (posible capitulo) y hay más de 1 en la lista, lo deja al final
                 if b_debug: print(ident, "BP35: Salto capitulo ", line)
                 jump_list.append(line)
             else:
@@ -370,7 +362,7 @@ def generate_index_file_resuelve(option_list, q_sublevels=5, n_level_id=[], styl
                 arr_levels = [] # Niveles del item actual
                 arr_styles = [] # Estilos de los niveles del item actual
 
-                if len(n_level_id)>q_sublevels: # cuando esto pasa se entiende que estÃ¡ dentro de una funcion recursiva
+                if len(n_level_id)>q_sublevels: # cuando esto pasa se entiende que está dentro de una funcion recursiva
                     arr_levels = n_level_id[:-q_sublevels] # toma los primeros niveles para completar el array
                     arr_styles = style_level_id[:-q_sublevels]
                 arr_levels.extend([int(i) for i in str(item_num).split('.')[0:q_sublevels]]) # completa el nivel con el numeral actual
@@ -384,16 +376,16 @@ def generate_index_file_resuelve(option_list, q_sublevels=5, n_level_id=[], styl
                 if b_debug: print(ident, "BP39: b_valido ", b_valido, n_level_id, style_level_id, arr_levels, arr_styles)
                 if b_valido:
                     if b_debug: print(ident, "BP40: Aprobado por la funcion ", n_level_id, arr_levels)
-                    # se revisa si este es el Ãºnico para insertar, va directo
-                    # o si este serÃ­a el primer dato de la lista
+                    # se revisa si este es el único para insertar, va directo
+                    # o si este sería el primer dato de la lista
                     if len(jump_list)==0 or (n_level_id[0]==0 and arr_levels[0]==1): 
                         b_insert_item = True
                     else: # revisa los que tiene como opcionados
                         if b_debug: print(ident, "BP50 - Recursivo: ", n_level_id[len(n_level_id)-q_sublevels])
                         if n_level_id[len(n_level_id)-q_sublevels]!=0:
-                            # solo baja de nivel cual en el nivel actual no va en cero la numeraciÃ³n
+                            # solo baja de nivel cual en el nivel actual no va en cero la numeración
                             if b_debug: print(ident, "BP51 - Pendientes: ", jump_list)
-                            if jump_list[0][3] == 0: # se insertÃ³ como un posible capitulo
+                            if jump_list[0][3] == 0: # se insertó como un posible capitulo
                                 if b_debug: print(ident, "BP52 - Nuevo capitulo ", jump_list[0])
                                 chapter+=1
                                 final_index.append([jump_list[0][0], 
@@ -417,9 +409,9 @@ def generate_index_file_resuelve(option_list, q_sublevels=5, n_level_id=[], styl
                             if len(tout_1)>0:
                                 if b_debug: print(ident, "Fusion de ", len(tout_1), " filas.")
                                 final_index.extend(tout_1)
-                                if b_debug: print(ident, "BP55 - Validar Ãºltimo item: ", n_level_id, line_text, " vs tout_1 ", tout_1)
-                                if tout_1[-1:][0][2]!=line_text: # la fila actual no fue insertada, pero a este nivel si es vÃ¡lida
-                                    if b_debug: print(ident, "BP56 - Recuperar Ãºltimo item: ", n_level_id, line_text)
+                                if b_debug: print(ident, "BP55 - Validar último item: ", n_level_id, line_text, " vs tout_1 ", tout_1)
+                                if tout_1[-1:][0][2]!=line_text: # la fila actual no fue insertada, pero a este nivel si es válida
+                                    if b_debug: print(ident, "BP56 - Recuperar último item: ", n_level_id, line_text)
                                     b_insert_item = True
                             else:
                                 b_insert_item = True
@@ -427,7 +419,7 @@ def generate_index_file_resuelve(option_list, q_sublevels=5, n_level_id=[], styl
                             b_insert_item = True
                         jump_list = []
                         if b_debug: print(ident, "BP59 - Finalizada recursividad: ")
-                    if b_insert_item: # esta es la funcion bÃ¡sica de inserciÃ³n de la funcion recursiva
+                    if b_insert_item: # esta es la funcion básica de inserción de la funcion recursiva
                         n_level_id = [i for i in arr_levels]
                         style_level_id = [i for i in arr_styles]
                         final_index.append([file_name, file_line, line_text, n_level_id])
@@ -438,9 +430,9 @@ def generate_index_file_resuelve(option_list, q_sublevels=5, n_level_id=[], styl
         # Aqui termina el For
 
         if len(jump_list)!=0 and n_level_id[len(n_level_id)-q_sublevels]!=0:
-            # solo baja de nivel cuando hay posibilidades saltadas en numeraciÃ³n y el nivel actual es distinto de cero
+            # solo baja de nivel cuando hay posibilidades saltadas en numeración y el nivel actual es distinto de cero
             if b_debug: print(ident, "BP60 - Complemento Recursivo: ", jump_list)
-            if jump_list[0][3] == 0: # se insertÃ³ como un posible capitulo
+            if jump_list[0][3] == 0: # se insertó como un posible capitulo
                 chapter+=1
                 final_index.append([jump_list[0][0], 
                                     jump_list[0][1], 
@@ -467,23 +459,22 @@ def generate_index_file_resuelve(option_list, q_sublevels=5, n_level_id=[], styl
     return final_index, n_level_id, style_level_id
 
 def clean_data(list_files, path_files, path_processed):
-	total_files = 0
-	for txt_file in list_files:
-		print("Moving", txt_file)
-		total_files+=1
-		os.rename(path_files + txt_file, path_processed + txt_file)
-
-	return total_files
+    total_files = 0
+    for txt_file in list_files:
+        print("Moving from ", path_files + txt_file, "to", path_processed + txt_file)
+        total_files+=1
+        os.rename(path_files + txt_file, path_processed + txt_file)
+    return total_files
 
 
 ### main
+engine = create_engine(t96.sqlConnString)
+engine.execute("insert into tt_log_transaccion (operacion, comentario) values ('Extracion Indice Resuelve','Inicia proceso')")
 
 list_files_text = os.listdir(path_in_txt)
 list_files_ocr = os.listdir(path_in_ocr)
 
-engine = create_engine('YOUR CONNECTION STRING')
-
-# cÃ¡lculo de indice para corpus text
+# cálculo de indice para corpus text
 temp_list_index_items_text = pre_filter_items_resuelve(list_files_text, path_in_txt, False)
 list_files_index_text = np.unique([item[0] for item in temp_list_index_items_text])
 
@@ -491,7 +482,7 @@ for file_name in list_files_index_text:
     index_items_text, _, _ = generate_index_file_resuelve([item for item in temp_list_index_items_text if item[0]==file_name], q_sublevels=n_max_sublevels, b_debug=False)
     save_index_file(index_items_text, engine, sType='Resuelve', n_level=n_max_sublevels)
 
-# cÃ¡lculo de indice para corpus ocr
+# cálculo de indice para corpus ocr
 temp_list_index_items_ocr = pre_filter_items_resuelve(list_files_ocr, path_in_ocr, False)
 list_files_index_ocr = np.unique([item[0] for item in temp_list_index_items_ocr])
 
@@ -501,3 +492,5 @@ for file_name in list_files_index_ocr:
 
 clean_data(list_files_text, path_in_txt, path_done_txt)
 clean_data(list_files_ocr, path_in_ocr, path_done_ocr)
+
+engine.execute("insert into tt_log_transaccion (operacion, comentario) values ('Extracion Indice Resuelve','Fin proceso')")

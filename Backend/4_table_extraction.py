@@ -1,8 +1,9 @@
 #!/usr/bin/python
 # -*- coding: latin-1 -*-
 
+### importacion de librerÌas
+import common as t96
 import numpy as np
-### importacion de librer√≠as
 import pandas as pd
 import seaborn as sns;
 sns.set()
@@ -21,13 +22,12 @@ from difflib import SequenceMatcher
 from sqlalchemy import create_engine
 
 ### variables globales
+path_input = t96.path_in_static_data[:-1]
+path_input_txt = t96.path_tmp_txt[:-1]
+path_input_ocr = t96.path_tmp_ocr[:-1]
 
-path_input = 'data'
-path_input_txt = 'tmp/text'
-path_input_ocr = 'tmp/ocr'
-
-file_in_dicc_csv = 'Dicc_Stop.csv'
-file_in_geojson = 'shp_sinap.geojson'
+file_in_dicc_csv = t96.file_in_dicc_csv
+file_in_geojson = t96.file_in_geojson
 
 file_ids_text = ".*.txt"
 file_ids_ocr = ".*.txt"
@@ -36,8 +36,8 @@ pd.options.mode.chained_assignment = None
 
 my_stop_words_names = ["TIERRAS","Y","RADICADO","OPOSITORES"]
 my_stop_words_descapitalize = ["Cd","Representante","Examinado","Titulo","Ibague","Tolima","Credito","Agrario","Vereda",
-                               "A√±o","Justicia","Transicional","Teoria","Sistema","Nacional","Paragrafo","Sala","Civil",
-                               "Especializada","La","Exp","Valledupar","Mundo","Opositores","Se√±or","Opositor","Y","El",
+                               "AÒo","Justicia","Transicional","Teoria","Sistema","Nacional","Paragrafo","Sala","Civil",
+                               "Especializada","La","Exp","Valledupar","Mundo","Opositores","SeÒor","Opositor","Y","El",
                                "Rad","Magistrado","Ponente","Tierras","Accionante","Radicado","No","Codigo","Derechos",
                                "Unidad","Tambien","Bogota","Juzgado","Especializado","Sentencia","Pretende","Colombia",
                                "Tribunal","Superior","Resguardo","Indigena","Cucuta","Proyecto","Consecutivo","Expediente",
@@ -59,14 +59,14 @@ key_juez=['juez','jueza','j u e z']
 key_magister=['magistrado','magistrada','magistrados','magis','rada','rado','gistrad','magis rado','Mag.']
 key_magister2=['juez','magistrado','jueza','magistrada','magistrados']
 key_ponente=['ponente']
-black_list_magistrado=['magistrado','ponente','promiscuo','magistrados','oficinas','registro','instrumentos','p√∫blicos',
+black_list_magistrado=['magistrado','ponente','promiscuo','magistrados','oficinas','registro','instrumentos','p˙blicos',
                        'juez','municipal','coyaima','tol','JuezRadicado','magistrada','Magistra','jueza',
                        'primero','segundo','tercero','gistrada','rada','magis','Magis rado']
 
 key_tribunal1=['tribunal superior del','tribunal superior de']
 key_opositor=['opositor','opone','opositores','oponen','opositora']
-key_opositor2=['oposici√≥n','oposocion']
-black_list_opositor=['opositor','opone','opositores','oponen','opositora','Resoluci√≥n','nro','OPOSICION','es','se']
+key_opositor2=['oposiciÛn','oposocion']
+black_list_opositor=['opositor','opone','opositores','oponen','opositora','ResoluciÛn','nro','OPOSICION','es','se']
 
 ordinales = [["PRIMERO"],
              ["SEGUNDO"],
@@ -74,45 +74,45 @@ ordinales = [["PRIMERO"],
              ["CUARTO"],
              ["QUINTO"],
              ["SEXTO"],
-             ["S√âPTIMO"],
+             ["S…PTIMO"],
              ["OCTAVO"],
              ["NOVENO"],
-             ["D√âCIMO"],
-             ["UND√âCIMO","D√âCIMO PRIMERO"],
-             ["DUOD√âCIMO","D√âCIMO SEGUNDO"],
-             ["D√âCIMO TERCERO"],
-             ["D√âCIMO CUARTO"],
-             ["D√âCIMO QUINTO"],
+             ["D…CIMO"],
+             ["UND…CIMO","D…CIMO PRIMERO"],
+             ["DUOD…CIMO","D…CIMO SEGUNDO"],
+             ["D…CIMO TERCERO"],
+             ["D…CIMO CUARTO"],
+             ["D…CIMO QUINTO"],
              ["DECIMO SEXTO"],
-             ["DECIMO S√âPTIMO"],
+             ["DECIMO S…PTIMO"],
              ["DECIMO OCTAVO"],
-             ["D√âCIMO NOVENO"],
-             ["VIG√âSIMO"],
-             ["VIG√âSIMO PRIMERO"],
-             ["VIG√âSIMO SEGUNDO"],
-             ["VIG√âSIMO TERCERO"],
-             ["VIG√âSIMO CUARTO"],
-             ["VIG√âSIMO QUINTO"],
-             ["VIG√âSIMO S√âPTIMO"],
-             ["VIG√âSIMO OCTAVO"],
-             ["VIG√âSIMO NOVENO"],
-             ["TRIG√âSIMO"],
-             ["TRIG√âSIMO PRIMERO"],
-             ["TRIG√âSIMO SEGUNDO"],
-             ["TRIG√âSIMO TERCERO"],
-             ["TRIG√âSIMO CUARTO"],
-             ["TRIG√âSIMO QUINTO"],
-             ["TRIG√âSIMO SEXTO"],
-             ["TRIG√âSIMO S√âPTIMO"],
-             ["TRIG√âSIMO OCTAVO"],
-             ["TRIG√âSIMO NOVENO"],
-             ["CUADRAG√âSIMO"],
-             ["CUADRAG√âSIMO PRIMERO"],
-             ["CUADRAG√âSIMO SEGUNDO"],
-             ["CUADRAG√âSIMO TERCERO"],
-             ["CUADRAG√âSIMO CUARTO"],
-             ["CUADRAG√âSIMO QUINTO"],
-             ["CUADRAG√âSIMO SEXTO"]]
+             ["D…CIMO NOVENO"],
+             ["VIG…SIMO"],
+             ["VIG…SIMO PRIMERO"],
+             ["VIG…SIMO SEGUNDO"],
+             ["VIG…SIMO TERCERO"],
+             ["VIG…SIMO CUARTO"],
+             ["VIG…SIMO QUINTO"],
+             ["VIG…SIMO S…PTIMO"],
+             ["VIG…SIMO OCTAVO"],
+             ["VIG…SIMO NOVENO"],
+             ["TRIG…SIMO"],
+             ["TRIG…SIMO PRIMERO"],
+             ["TRIG…SIMO SEGUNDO"],
+             ["TRIG…SIMO TERCERO"],
+             ["TRIG…SIMO CUARTO"],
+             ["TRIG…SIMO QUINTO"],
+             ["TRIG…SIMO SEXTO"],
+             ["TRIG…SIMO S…PTIMO"],
+             ["TRIG…SIMO OCTAVO"],
+             ["TRIG…SIMO NOVENO"],
+             ["CUADRAG…SIMO"],
+             ["CUADRAG…SIMO PRIMERO"],
+             ["CUADRAG…SIMO SEGUNDO"],
+             ["CUADRAG…SIMO TERCERO"],
+             ["CUADRAG…SIMO CUARTO"],
+             ["CUADRAG…SIMO QUINTO"],
+             ["CUADRAG…SIMO SEXTO"]]
 
 # Funciones
 
@@ -123,7 +123,7 @@ def list_concordances_ltc(list_concors):
     return list_temp1 + list_temp2 + list_temp3
 
 def replace_accents(text):
-    a,b = '√°√©√≠√≥√∫√º√Å√â√ç√ì√ö','aeiouuAEIOU'
+    a,b = '·ÈÌÛ˙¸¡…Õ”⁄','aeiouuAEIOU'
     trans = str.maketrans(a,b)
     return text.translate(trans)
     
@@ -133,9 +133,9 @@ def names_prob(raw):
     list_concordances = ["solicitante","solicitantes",
                          "ponente","ponentes",
                          "instaurada","instauradas","formulada","resuelve",
-                         "representaci√≥n",
-                         "favor","reconocer","compense","reparaci√≥n",
-                         "v√≠ctimas","v√≠ctima"] # Sobreajusta ,"se√±or","se√±ora","se√±ores","reclamante","reclamantes"]
+                         "representaciÛn",
+                         "favor","reconocer","compense","reparaciÛn",
+                         "vÌctimas","vÌctima"] # Sobreajusta ,"seÒor","seÒora","seÒores","reclamante","reclamantes"]
     list_exceptions = ["testigo"]
     text_List_result = []        
     for list_concordance in list_concordances_ltc(list_concordances):
@@ -300,7 +300,7 @@ def select_best(file, corpus_temp):
 def DNI_prob(file, corpus_temp, filter_name):
     text_List = word_tokenize(replace_accents(corpus_temp.raw(file)))
     text_List = nltk.Text(text_List)
-    list_concordances = ["cedula", "cedulas", "C.C.N", "C.C", "CC", "C.C.N.¬∞"]
+    list_concordances = ["cedula", "cedulas", "C.C.N", "C.C", "CC", "C.C.N.∞"]
     text_List_result = []
 
     for concordance in list_concordances_ltc(list_concordances):
@@ -369,9 +369,9 @@ def list_concordances_CC(list_concors):
 def radicado_prob(file, corpus_temp):
     text_List = word_tokenize(corpus_temp.raw(file).replace("\r\n", " ~ "))
     text_List = nltk.Text(text_List)
-    list_concordances = ["Solicitud","Radicaci√≥n","Radicado","Ref",
-                         "Rad","CIU","P√°g","Tribunal","Sentencia","Prescripci√≥n",
-                         "Acci√≥n","Expediente"]
+    list_concordances = ["Solicitud","RadicaciÛn","Radicado","Ref",
+                         "Rad","CIU","P·g","Tribunal","Sentencia","PrescripciÛn",
+                         "AcciÛn","Expediente"]
     text_List_result = []    
     
     for list_concordance in list_concordances_ltc(list_concordances):
@@ -381,7 +381,7 @@ def radicado_prob(file, corpus_temp):
             text_List_result = text_List_result + text_List_temp
     text_List_result =  list(set(text_List_result))
     results = ''.join(text_List_result)
-    results = results.replace(" ", "").replace("i", "1").replace("I", "1").replace("√ç", "1").replace("o", "0").replace("O", "0").replace("W", "4").replace("N0.", "").replace(".", "").replace("-", "")  
+    results = results.replace(" ", "").replace("i", "1").replace("I", "1").replace("Õ", "1").replace("o", "0").replace("O", "0").replace("W", "4").replace("N0.", "").replace(".", "").replace("-", "")  
     regex = r"\d+-*_*[.]*\d+-*_*[.]*\d+-*_*[.]*\d+-*_*[.]*\d+-*_*[.]*\d+-*_*[.]*\d+-*_*[.]*\d+-*_*[.]*"
     radicado = re.findall(regex, results)
     radicado = [clean_radicado(rad) for rad in radicado if clean_radicado(rad) != ""]
@@ -502,7 +502,7 @@ def select_best_m_inm(file, corpus_temp):
     return df_names, list_prob
 
 def cedula_catastral_prob(file, corpus_temp):
-    text_List = word_tokenize(corpus_temp.raw(file).replace("\r\n", "").replace("i", "1").replace("I", "1").replace("√ç", "1").replace("o", "0").replace("O", "0").replace("W", "4").replace("n0", "").replace("N0", "").replace("Nr0.", "").replace("N0.", "").replace("n0.", "").replace("=", "").replace("c a t a s t r a l","catastral"))
+    text_List = word_tokenize(corpus_temp.raw(file).replace("\r\n", "").replace("i", "1").replace("I", "1").replace("Õ", "1").replace("o", "0").replace("O", "0").replace("W", "4").replace("n0", "").replace("N0", "").replace("Nr0.", "").replace("N0.", "").replace("n0.", "").replace("=", "").replace("c a t a s t r a l","catastral"))
     text_List = nltk.Text(text_List)
     list_concordances = ["catastral","catastrales"]
     text_List_result = []    
@@ -590,10 +590,10 @@ def clean_General(text_clean):
     for replaced in stop_municipio:
         text_clean = re.sub(rf"\b{replaced}\b"," "+replaced.lower()+" ",text_clean)    
     
-    text_clean = text_clean.replace("√É¬±","√±")#√É¬±
+    text_clean = text_clean.replace("√±","Ò")#√±
     text_clean = text_clean.replace(" de "," De ")
     text_clean = text_clean.replace(" y "," separador ")
-    text_clean = text_clean.replace("[¬ì|¬î|¬ó|¬ñ|¬ø|¬ï|¬í|¬ë|_|_]"," ")
+    text_clean = text_clean.replace("[ì|î|ó|ñ|ø|ï|í|ë|_|_]"," ")
     text_clean = re.sub(' +', ' ',text_clean)    
     return text_clean
 
@@ -726,7 +726,7 @@ def best_departamento(list_departamento):
     for index, row in Departamento_df.iterrows():
         dep_compare = replace_accents(row["Nombre Departamento"]).lower()
         higher_score = SequenceMatcher(None, dep_compare, departamento_temp).ratio()
-        list_dep_scores.append({"Departamento":row["Nombre Departamento"],"C√≥digo Departamento":row["C√≥digo Departamento"],"score":higher_score})        
+        list_dep_scores.append({"Departamento":row["Nombre Departamento"],"CÛdigo Departamento":row["CÛdigo Departamento"],"score":higher_score})        
     list_dep_scores = pd.DataFrame(list_dep_scores)
     higher_score= list_dep_scores.score.max()
     if higher_score > 0.85:
@@ -741,7 +741,7 @@ def best_municipio(list_municipio):
     for index, row in Municipio_df.iterrows():
         mun_compare = replace_accents(row["Nombre Municipio"]).lower()
         higher_score = SequenceMatcher(None, mun_compare, municipio_temp).ratio()
-        list_municipio_scores.append({"Municipio":row["Nombre Municipio"],"C√≥digo Municipio":row["C√≥digo Municipio"],"score":higher_score})        
+        list_municipio_scores.append({"Municipio":row["Nombre Municipio"],"CÛdigo Municipio":row["CÛdigo Municipio"],"score":higher_score})        
     list_municipio_scores = pd.DataFrame(list_municipio_scores)
     higher_score= list_municipio_scores.score.max()
     if higher_score > 0.85:
@@ -756,7 +756,7 @@ def best_corregimiento(list_corregimiento):
     for index, row in codane.iterrows():
         corregimiento_compare = replace_accents(row["Nombre Centro Poblado"]).lower()
         higher_score = SequenceMatcher(None, corregimiento_compare, corregimiento_temp).ratio()
-        list_corregimiento_scores.append({"Centro Poblado":row["Nombre Centro Poblado"],"C√≥digo Centro Poblado":row["C√≥digo Centro Poblado"],"score":higher_score})        
+        list_corregimiento_scores.append({"Centro Poblado":row["Nombre Centro Poblado"],"CÛdigo Centro Poblado":row["CÛdigo Centro Poblado"],"score":higher_score})        
     list_corregimiento_scores = pd.DataFrame(list_corregimiento_scores)
     higher_score= list_corregimiento_scores.score.max()
     if higher_score > 0.85:
@@ -805,17 +805,17 @@ def extrac_location(file,corpus_tem):
     print("Probables Municipio:", list_municipio_copy)
     if len(list_municipio)>0:
         cod_dep = 0
-        if len(list_departamento)>0: cod_dep = int(list_departamento[0]["C√≥digo Departamento"]) ##############
+        if len(list_departamento)>0: cod_dep = int(list_departamento[0]["CÛdigo Departamento"]) ##############
         list_municipio = best_municipio(list_municipio)
         print("Probables Municipio Codane:", list_municipio)
         list_municipio_join = []
         for each_dic in list_municipio:
-            cod_dep_temp = str(each_dic['C√≥digo Municipio'])[0:2] if len(str(each_dic['C√≥digo Municipio'])) == 5 else str(each_dic['C√≥digo Municipio'])[0:1]
+            cod_dep_temp = str(each_dic['CÛdigo Municipio'])[0:2] if len(str(each_dic['CÛdigo Municipio'])) == 5 else str(each_dic['CÛdigo Municipio'])[0:1]
             if cod_dep == 0 and len(list_municipio)==1:
                 for index, row in Departamento_df.iterrows():
-                    if int(row["C√≥digo Departamento"]) == int(cod_dep_temp):
-                        cod_dep = int(row["C√≥digo Departamento"])
-                        list_departamento = [{"Departamento":row["Nombre Departamento"],"C√≥digo Departamento":row["C√≥digo Departamento"],"score":1}]
+                    if int(row["CÛdigo Departamento"]) == int(cod_dep_temp):
+                        cod_dep = int(row["CÛdigo Departamento"])
+                        list_departamento = [{"Departamento":row["Nombre Departamento"],"CÛdigo Departamento":row["CÛdigo Departamento"],"score":1}]
                         print("Departamento reprocesado Desde Munucipio")
                         print("Departamento Extraido :", list_departamento)
                         break
@@ -826,11 +826,11 @@ def extrac_location(file,corpus_tem):
             list_municipio = list_municipio_join
         else:
             print("Municipio Extraidos Eliminados")
-            list_municipio = [{"Municipio":"Not Found","C√≥digo Municipio":"Not Found","score":"Not Found"}]
+            list_municipio = [{"Municipio":"Not Found","CÛdigo Municipio":"Not Found","score":"Not Found"}]
     else:
-        list_municipio = [{"Municipio":"Not Found","C√≥digo Municipio":"Not Found","score":"Not Found"}]
+        list_municipio = [{"Municipio":"Not Found","CÛdigo Municipio":"Not Found","score":"Not Found"}]
 
-    if len(list_departamento) == 0: list_departamento = [{'Departamento': 'Not Found', 'C√≥digo Departamento': "Not Found", 'score': "Not Found"}]
+    if len(list_departamento) == 0: list_departamento = [{'Departamento': 'Not Found', 'CÛdigo Departamento': "Not Found", 'score': "Not Found"}]
 
     print("\n")
     list_corregimiento_copy = list_corregimiento
@@ -838,13 +838,13 @@ def extrac_location(file,corpus_tem):
     print("Probables Corregimiento:", list_corregimiento_copy)
     cod_mun = -1
     if len(list_corregimiento)>0:
-        if len(list_municipio)>0 and list_municipio[0]["C√≥digo Municipio"] != "Not Found":
-            cod_mun = int(list_municipio[0]["C√≥digo Municipio"])
+        if len(list_municipio)>0 and list_municipio[0]["CÛdigo Municipio"] != "Not Found":
+            cod_mun = int(list_municipio[0]["CÛdigo Municipio"])
         list_corregimiento = best_corregimiento(list_corregimiento)
         print("Probables Corregimiento Codane:", list_corregimiento)
         list_corregimiento_join = []
         for each_dic in list_corregimiento:
-            cod_mun_temp = str(each_dic['C√≥digo Centro Poblado'])[0:5] if len(str(each_dic['C√≥digo Centro Poblado'])) == 8 else str(each_dic['C√≥digo Centro Poblado'])[0:4]
+            cod_mun_temp = str(each_dic['CÛdigo Centro Poblado'])[0:5] if len(str(each_dic['CÛdigo Centro Poblado'])) == 8 else str(each_dic['CÛdigo Centro Poblado'])[0:4]
             if int(cod_mun)==int(cod_mun_temp):
                 list_corregimiento_join.append(each_dic)
         if len(list_corregimiento_join)>0:
@@ -852,9 +852,9 @@ def extrac_location(file,corpus_tem):
             list_corregimiento = list_corregimiento_join
         else:
             print("Corregimiento Extraidos No codane:",list(max_values(list_corregimiento_copy).keys())[0])
-            list_corregimiento = [{"Centro Poblado":list(max_values(list_corregimiento_copy).keys())[0],"C√≥digo Centro Poblado":'Not Found',"score":'Not Found'}]
+            list_corregimiento = [{"Centro Poblado":list(max_values(list_corregimiento_copy).keys())[0],"CÛdigo Centro Poblado":'Not Found',"score":'Not Found'}]
     else:
-        list_corregimiento = [{"Centro Poblado":'Not Found',"C√≥digo Centro Poblado":'Not Found',"score":'Not Found'}]
+        list_corregimiento = [{"Centro Poblado":'Not Found',"CÛdigo Centro Poblado":'Not Found',"score":'Not Found'}]
 
     print("\n")
     list_vereda_copy = list_vereda
@@ -862,13 +862,13 @@ def extrac_location(file,corpus_tem):
     print("Probables vereda:", list_vereda_copy)
     cod_mun = -1
     if len(list_vereda)>0:
-        if len(list_municipio)>0 and list_municipio[0]["C√≥digo Municipio"] != "Not Found":
-            cod_mun = int(list_municipio[0]["C√≥digo Municipio"])
+        if len(list_municipio)>0 and list_municipio[0]["CÛdigo Municipio"] != "Not Found":
+            cod_mun = int(list_municipio[0]["CÛdigo Municipio"])
         list_vereda = best_corregimiento(list_vereda)
         print("Probables Vereda Codane:", list_vereda)
         list_vereda_join = []
         for each_dic in list_vereda:
-            cod_mun_temp = str(each_dic['C√≥digo Centro Poblado'])[0:5] if len(str(each_dic['C√≥digo Centro Poblado'])) == 8 else str(each_dic['C√≥digo Centro Poblado'])[0:4]
+            cod_mun_temp = str(each_dic['CÛdigo Centro Poblado'])[0:5] if len(str(each_dic['CÛdigo Centro Poblado'])) == 8 else str(each_dic['CÛdigo Centro Poblado'])[0:4]
             if cod_mun==int(cod_mun_temp):
                 list_vereda_join.append(each_dic) 
         if len(list_vereda_join)>0:
@@ -876,9 +876,9 @@ def extrac_location(file,corpus_tem):
             list_vereda = list_vereda_join
         else: 
             print("Vereda Extraidos No codane:",list(max_values(list_vereda_copy).keys())[0]) 
-            list_vereda = [{"Centro Poblado":list(max_values(list_vereda_copy).keys())[0],"C√≥digo Centro Poblado":'Not Found',"score":'Not Found'}]
+            list_vereda = [{"Centro Poblado":list(max_values(list_vereda_copy).keys())[0],"CÛdigo Centro Poblado":'Not Found',"score":'Not Found'}]
     else:        
-        list_vereda = [{"Centro Poblado":'Not Found',"C√≥digo Centro Poblado":'Not Found',"score":'Not Found'}]
+        list_vereda = [{"Centro Poblado":'Not Found',"CÛdigo Centro Poblado":'Not Found',"score":'Not Found'}]
 
     df_departamento = pd.DataFrame(list_departamento).drop(["score"], axis=1)
     df_departamento["Certificado"] = list(df_work_temp["Certificado"])[0]
@@ -886,10 +886,10 @@ def extrac_location(file,corpus_tem):
     df_municipio = pd.DataFrame(list_municipio).drop(['score'], axis=1)
     df_municipio["Certificado"] = list(df_work_temp["Certificado"])[0]
     df_municipio.set_index("Certificado",inplace=True)
-    df_corregimiento = pd.DataFrame(list_corregimiento).rename(columns={'Centro Poblado': 'Corregimiento', 'C√≥digo Centro Poblado': 'C√≥digo Corregimiento'}).drop(['score'], axis=1)
+    df_corregimiento = pd.DataFrame(list_corregimiento).rename(columns={'Centro Poblado': 'Corregimiento', 'CÛdigo Centro Poblado': 'CÛdigo Corregimiento'}).drop(['score'], axis=1)
     df_corregimiento["Certificado"] = list(df_work_temp["Certificado"])[0]
     df_corregimiento.set_index("Certificado",inplace=True)
-    df_vereda = pd.DataFrame(list_vereda).rename(columns={'Centro Poblado': 'Vereda', 'C√≥digo Centro Poblado': 'C√≥digo Vereda'}).drop(['score'], axis=1)
+    df_vereda = pd.DataFrame(list_vereda).rename(columns={'Centro Poblado': 'Vereda', 'CÛdigo Centro Poblado': 'CÛdigo Vereda'}).drop(['score'], axis=1)
     df_vereda["Certificado"] = list(df_work_temp["Certificado"])[0]
     df_vereda.set_index("Certificado",inplace=True)
     df_locate = pd.merge(pd.merge(pd.merge(df_departamento, df_municipio, right_index=True, left_index=True), df_corregimiento, right_index=True, left_index=True), df_vereda, right_index=True, left_index=True)
@@ -927,7 +927,7 @@ def clean_name(name_text):
 def nucleo_familiar_prob2(file, corpus_temp):
     text_List = word_tokenize(corpus_temp.raw(file))
     text_List = nltk.Text(text_List)
-    list_concordances = ["n√∫cleo","reconocer","beneficiarios","reparaci√≥n"]  
+    list_concordances = ["n˙cleo","reconocer","beneficiarios","reparaciÛn"]  
     
     text_List_result = []    
     
@@ -938,7 +938,7 @@ def nucleo_familiar_prob2(file, corpus_temp):
             text_List_result = text_List_result + text_List_temp
     text_List_result =  list(set(text_List_result))
     
-    list_filter = ["conformado","v√≠ctima","ingrese","favor"]
+    list_filter = ["conformado","vÌctima","ingrese","favor"]
     
     results = []
     for elem_f in list_concordances_ltc(list_filter):
@@ -1004,17 +1004,17 @@ def clean_step2(text_clean):
     replaceds = set(re.findall(regex, text_clean))
     for replaced in replaceds:
         text_clean = re.sub(rf"\b{replaced}\b"," "+replaced.capitalize()+" ",text_clean)
-    text_clean = text_clean.replace("√É¬±","√±")#√É¬±
+    text_clean = text_clean.replace("√±","Ò")#√±
     text_clean = text_clean.replace(" de "," De ")
     text_clean = text_clean.replace(" y "," separador ")
-    text_clean = text_clean.replace("¬ì"," ")
-    text_clean = text_clean.replace("¬î"," ")
-    text_clean = text_clean.replace("¬ó"," ")
-    text_clean = text_clean.replace("¬ñ"," ")
-    text_clean = text_clean.replace("¬ø"," ")
-    text_clean = text_clean.replace("¬ï"," ")
-    text_clean = text_clean.replace("¬í"," ")
-    text_clean = text_clean.replace("¬ë"," ")
+    text_clean = text_clean.replace("ì"," ")
+    text_clean = text_clean.replace("î"," ")
+    text_clean = text_clean.replace("ó"," ")
+    text_clean = text_clean.replace("ñ"," ")
+    text_clean = text_clean.replace("ø"," ")
+    text_clean = text_clean.replace("ï"," ")
+    text_clean = text_clean.replace("í"," ")
+    text_clean = text_clean.replace("ë"," ")
     
     for descapitalize in my_stop_words_descapitalize_nucleo:
         text_clean = re.sub(rf"\b{descapitalize}\b"," "+descapitalize.lower()+" ",text_clean)
@@ -1139,17 +1139,17 @@ def extrac_nucleo_familiar(file, corpus_temp):
 
 
 def clean_coordenadas(cor):
-    cor = cor.replace("\"","¬∞")
-    cor = cor.replace("\'","¬∞")
-    cor = cor.replace("*","¬∞")
-    cor = cor.replace("¬í","¬∞")
-    cor = cor.replace("¬î","¬∞")
-    cor = cor.replace("¬ï","¬∞")
-    cor = cor.replace("¬∫","¬∞")
-    cor = cor.replace("¬Æ","¬∞")
+    cor = cor.replace("\"","∞")
+    cor = cor.replace("\'","∞")
+    cor = cor.replace("*","∞")
+    cor = cor.replace("í","∞")
+    cor = cor.replace("î","∞")
+    cor = cor.replace("ï","∞")
+    cor = cor.replace("∫","∞")
+    cor = cor.replace("Æ","∞")
     cor = re.sub(' +', ' ',cor)
     cor = re.sub('\.+', '.',cor)
-    cor = cor.split("¬∞")
+    cor = cor.split("∞")
     cor = [re.sub('\.+', '.',each.strip().replace(" ",".").replace(",",".")) for each in cor if each!=""]
     if len(cor) == 3:
         value_coordenada = 0
@@ -1167,8 +1167,8 @@ def clean_coordenadas(cor):
     return value_coordenada
 
 def extrac_coordenadas(file, corpus_temp):
-    lines = corpus_temp.raw(file).split ('\r\n')
-    regex = r"\d+\s*[\¬∞\"\'\*\¬í\¬î\¬ï\¬∫\¬Æ]\s*\d+\s?[\¬∞\"\'\*\¬í\¬î\¬ï\¬∫\¬Æ]\s*\d+\.?\,?\s?\d+\s?[\¬∞\"\'\*\¬í\¬î\¬ï\¬∫\¬Æ]"
+    lines = corpus_temp.raw(file).splitlines()
+    regex = r"\d+\s*[\∞\"\'\*\í\î\ï\∫\Æ]\s*\d+\s?[\∞\"\'\*\í\î\ï\∫\Æ]\s*\d+\.?\,?\s?\d+\s?[\∞\"\'\*\í\î\ï\∫\Æ]"
     list_coordenadas = []
     intro = True
     for line in lines:
@@ -1398,7 +1398,7 @@ def split(word):
     return word
     
 ######################################################
-###     EXTRACCI√ìN NOMBRE JUEZ Y MAGISTRADO       ###
+###     EXTRACCI”N NOMBRE JUEZ Y MAGISTRADO       ###
 ######################################################
 
 def find_range(lista,rango):
@@ -1446,7 +1446,7 @@ def extrae_magister(n, corpus_temp, black_list_temp):
     key_words2=list_concordances_ltc(key_magister2)
 
     file=corpus_temp.fileids()[n]
-    lines = corpus_temp.raw(file).split('\r\n')
+    lines = corpus_temp.raw(file).splitlines()
     llave_sentencia=file
     #lines=[line.lower() for line in lines]
     list_juez_text=[]
@@ -1532,7 +1532,7 @@ def extrae_magister(n, corpus_temp, black_list_temp):
     return(table4)
 
 ######################################################
-###     EXTRACCI√ìN NOMBRE OPOSITOR       ###
+###     EXTRACCI”N NOMBRE OPOSITOR       ###
 ######################################################
 
 def extrae_opositor(n, corpus_temp, black_list_temp):
@@ -1541,10 +1541,10 @@ def extrae_opositor(n, corpus_temp, black_list_temp):
     key_words2=list_concordances_ltc(key_opositor2)
     
     file=corpus_temp.fileids()[n]
-    lines = corpus_temp.raw(file).split('\r\n')
+    lines = corpus_temp.raw(file).splitlines()
     llave_sentencia=file
     #lines=[line.lower() for line in lines]
-    ### Validaci√≥n tribunal superior ####
+    ### ValidaciÛn tribunal superior ####
     verifica_tribunal=[]
     counter=-1
     for line in lines:
@@ -1625,13 +1625,13 @@ def extrac_resuelve(file, corpus_temp):
     counter = -1
     inicio = 0
     final = 0
-    lines = corpus_temp.raw(file).replace("RESUELV E", "RESUELVE").split('\r\n')
+    lines = corpus_temp.raw(file).replace("RESUELV E", "RESUELVE").splitlines()
     for line in lines:
         counter = counter + 1
         line_temp = replace_accents(re.sub(' +', ' ', line).strip().upper())
         for txt in txt_inicio:
             line = line.replace("?", "").replace("?", "")
-            if bool(re.search(rf"{txt}\s*:*=*¬∑*[.]*$", replace_accents(re.sub(' +', ' ', line).strip()))):
+            if bool(re.search(rf"{txt}\s*:*=*∑*[.]*$", replace_accents(re.sub(' +', ' ', line).strip()))):
                 inicio = counter
                 break
         if bool(re.search(rf"({txt_final})", line_temp)):
@@ -1740,7 +1740,7 @@ def extract_step_resuelve(file, corpus_temp):
                                                                                                   "ORDENAR").replace(
         "ordenar,", "ordenar")
 
-    lines = resuelve_work.split('\r\n')
+    lines = resuelve_work.splitlines()
     lines_clean = []
     for line in lines:
         line = re.sub(' +', ' ', line).strip()
@@ -1824,14 +1824,14 @@ def extract_step_resuelve(file, corpus_temp):
 
 
 def create_df_resuelve(resuelvesf, resuelves_workf, file):
-    #    refe = "Unidad Administrativa Especial de Gesti√≥n de Restituci√≥n de Tierras Despojadas"
+    #    refe = "Unidad Administrativa Especial de GestiÛn de RestituciÛn de Tierras Despojadas"
     str_1 = "a|la|al|en"
-    str_2 = "restituir|restitucion|restituirle|proteccion|entrega|inscripcion|protecci√≥n|favor|se√±or"
+    str_2 = "restituir|restitucion|restituirle|proteccion|entrega|inscripcion|protecciÛn|favor|seÒor"
     art_string1 = ["art " + str(_) for _ in list(range(1, 209))]
     art_string2 = ["articulo " + str(_) for _ in list(range(1, 209))]
     ordernar_text = ["ordenar", "ordena", "ordenese", "oficiar"]
     ordenar_beneficios = ["restituir", "restitucion", "restituirle", "proteccion", "entrega", "inscripcion",
-                          "protecci√≥n", "favor"]
+                          "protecciÛn", "favor"]
 
     ordenar_list = []
     columns_dfr = ["id", "Resuelve_cnt", "Text Resuelve", "Ordena", "beneficios", "articulos"]
@@ -1918,26 +1918,28 @@ def clean_steep2(text):
     text = re.sub('[.]+', '.', text).strip()
     return text
 
-### Ejecuci√≥n principal
+### EjecuciÛn principal
 
 ############################
 #New Load Postgrest
 ############################
 
-engine = create_engine('postgresql://postgres:LFnnLUQZQMJ9@db-test2.cxqola6hllvk.us-east-2.rds.amazonaws.com/t96_dev')
-df_work = pd.read_sql("SELECT * from mt_sentencia", engine.connect())
-df_work.columns = ['certificado','clase','descargar','Municipio/Vereda del predio','estado','paginas','tipo_archivo']
+engine = create_engine(t96.sqlConnString)
+engine.execute("insert into tt_log_transaccion (operacion, comentario) values ('Extracion general','Inicia proceso')")
+df_work = pd.read_sql("SELECT * from vw_sentencia", engine.connect())
+df_work.columns = ['Certificado','clase','descargar','Municipio/Vereda del predio','estado','paginas','tipo_archivo']
 
 codane = pd.read_sql("SELECT * from mt_dane_GEO", engine.connect())
-codane.columns = ['C√≥digo Departamento', 'C√≥digo Municipio', 'C√≥digo Centro Poblado',
+codane.columns = ['CÛdigo Departamento', 'CÛdigo Municipio', 'CÛdigo Centro Poblado',
        'Nombre Departamento', 'Nombre Municipio', 'Nombre Centro Poblado',
        'Tipo Centro Poblado', 'Longitud', 'Latitud', 'Nombre Distrito',
-       'Municipio/√Åreas No Municipalizadas (ANM)',
-       'Nombre √Årea Metropolitana']
+       'Municipio/¡reas No Municipalizadas (ANM)',
+       'Nombre ¡rea Metropolitana','fecha']
+codane.drop('fecha', axis=1, inplace=True)
 
-Municipio_df = codane.loc[:,["C√≥digo Departamento","C√≥digo Municipio","Nombre Departamento","Nombre Municipio"]]
+Municipio_df = codane.loc[:,["CÛdigo Departamento","CÛdigo Municipio","Nombre Departamento","Nombre Municipio"]]
 Municipio_df = Municipio_df.drop_duplicates().reset_index(drop=True)
-Departamento_df = Municipio_df.loc[:,["C√≥digo Departamento","Nombre Departamento"]]
+Departamento_df = Municipio_df.loc[:,["CÛdigo Departamento","Nombre Departamento"]]
 Departamento_df = Departamento_df.drop_duplicates().reset_index(drop=True)
 
 #MY_STOP_DICC
@@ -1962,16 +1964,13 @@ ids_ocr = corpus_ocr.fileids()
 black_list_magistrado=list_concordances_ltc(black_list_magistrado)
 black_list_opositor=list_concordances_ltc(black_list_opositor)
 
-#conecta con base de datos
-engine = create_engine('YOUR CONNECTION STRING')
-
 # Inserta en base de datos lo relacionado al corpus txt
 for n in range(0,len(ids)):
-    print("Procesando Archivo OCR ", ids[n])
+    print("Procesando Archivo TEXT ", ids[n])
     try:
         df_work_temp_fn, df_work_table_fn, df_locates_fn, df_pp_fn, nucleo_familiar_fn, df_rad_fn, df_cc_cat_fn, df_m_inm_fn, df_Georefenciacion_fn, list_locate_fn = return_tables_work(ids[n], corpus)
     except BaseException as ErrMsj:
-        print("Error extrayendo informaci√≥n general. Archivo: ", ids[n], ErrMsj)
+        print("Error extrayendo informaciÛn general. Archivo: ", ids[n], ErrMsj)
     else:
         strSQLDelete = "delete from tt_solicitante where key = '" + str(ids[n].replace(".txt", "")) + "'"
         engine.execute(strSQLDelete)
@@ -2051,7 +2050,7 @@ for n in range(0,len(ids_ocr)):
     try:
         df_work_temp_fn, df_work_table_fn, df_locates_fn, df_pp_fn, nucleo_familiar_fn, df_rad_fn, df_cc_cat_fn, df_m_inm_fn, df_Georefenciacion_fn, list_locate_fn = return_tables_work(ids_ocr[n], corpus_ocr)
     except BaseException as ErrMsj:
-        print("Error extrayendo informaci√≥n general. Archivo: ", ids_ocr[n], ErrMsj)
+        print("Error extrayendo informaciÛn general. Archivo: ", ids_ocr[n], ErrMsj)
     else:
         strSQLDelete = "delete from tt_solicitante where key = '" + str(ids_ocr[n].replace(".txt", "")) + "'"
         engine.execute(strSQLDelete)
@@ -2123,3 +2122,5 @@ for n in range(0,len(ids_ocr)):
             db_tosql = df_ordena_beneficios_w.copy()
             db_tosql.columns = ["key", "contador", "beneficio"]
             db_tosql.to_sql('tt_ordena_beneficios', engine, if_exists='append', index=False)
+
+engine.execute("insert into tt_log_transaccion (operacion, comentario) values ('Extracion general','Fin proceso')")

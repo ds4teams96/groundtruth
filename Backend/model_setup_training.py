@@ -2,6 +2,7 @@
 # -*- coding: latin-1 -*-
 
 ### LOAD LIBRARIES
+import common as t96
 import pandas as pd
 import re
 import string
@@ -22,11 +23,10 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.neural_network import MLPClassifier
 import pickle
 from tqdm import tqdm
+from sqlalchemy import create_engine
 
 ### GLOBAL VARIABLES
-path_data = 'tmp/output'
-path_out_model = 'data'
-file_in_resuelve = "resuelve.csv"
+path_out_model = t96.path_in_static_data[:-1]
 file_out_model1  = 'ModelOrdenVivienda.pkl'
 file_out_model2  = 'ModelProyectosProductivos.pkl'
 file_out_model3  = 'ModelCompensacionVictimas.pkl'
@@ -153,11 +153,15 @@ def model_save(dframe, model_name):
         pickle.dump(model, file)
 
 ### EXECUTION
-resuelve_e = pd.read_csv(path_data + '/' + file_in_resuelve)
+engine = create_engine(t96.sqlConnString)
+engine.execute("insert into tt_log_transaccion (operacion, comentario) values ('Entrenamiento','Inicia proceso')")
+
+resuelve_e = pd.read_sql("select * from tt_resuelve where certificado not in (select certificado from vw_pendiente_modelo) and usa_modelo = 'NO'", engine.connect())
+
 stopwords_spanish = stopwords.words('spanish')
 resuelve_e['RE'] = ''
 for r in tqdm(range(len(resuelve_e))):
-    text_temp = resuelve_e['Resuelve'][r]
+    text_temp = resuelve_e['resuelve'][r]
     text_temp = re.sub(r'C.C.', r'CÉDULA', text_temp)
     text_temp = re.sub(r'No.', r'NÚMERO', text_temp)
     text_temp = sent_tokenize(text_temp.lower())
@@ -174,7 +178,7 @@ for r in tqdm(range(len(resuelve_e))):
             resuelve_e['RE'][r] = ou2
 
 #Model 1 (ORDEN DE VIVIENDA)
-resuelve_e['Y'] = np.where(resuelve_e['ORDEN DE VIVIENDA']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['orden_vivienda']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -190,7 +194,7 @@ DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model1)
 
 #Model 2 (PROYECTOS PRODUCTIVOS PARA BENEFICIARIOS DE RESTITUCIÓN)
-resuelve_e['Y'] = np.where(resuelve_e['PROYECTOS PRODUCTIVOS PARA BENEFICIARIOS DE RESTITUCIÓN']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['proyectos_productivos_beneficiarios_restitucion']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -206,7 +210,7 @@ DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model2)
 
 #Model 3 (COMPENSACIÓN VICTIMAS)
-resuelve_e['Y'] = np.where(resuelve_e['COMPENSACIÓN VICTIMAS']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['compensacion_victimas']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -222,7 +226,7 @@ DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model3)
 
 #Model 4 (COMPENSACIÓN TERCEROS)
-resuelve_e['Y'] = np.where(resuelve_e['COMPENSACIÓN TERCEROS']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['compensacion_terceros']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -238,7 +242,7 @@ DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model4)
 
 #Model 5 (SEGUNDOS OCUPANTES)
-resuelve_e['Y'] = np.where(resuelve_e['SEGUNDOS OCUPANTES']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['segundos_ocupantes']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -254,7 +258,7 @@ DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model5)
 
 #Model 6 (ALIVIO PREDIAL)
-resuelve_e['Y'] = np.where(resuelve_e['ALIVIO PREDIAL']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['alivio_predial']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -270,7 +274,7 @@ DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model6)
 
 #Model 7 (ALIVIO DE SERVICIOS PÚBLICOS)
-resuelve_e['Y'] = np.where(resuelve_e['ALIVIO DE SERVICIOS PÚBLICOS']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['alivio_servicios_publicos']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -286,7 +290,7 @@ DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model7)
 
 #Model 8 (ALIVIO DE PASIVOS FINANCIEROS)
-resuelve_e['Y'] = np.where(resuelve_e['ALIVIO DE PASIVOS FINANCIEROS']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['alivio_pasivos_financieros']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -302,7 +306,7 @@ DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model8)
 
 #Model 9 (PAGOS DE COSTAS Y GASTOS JUDICIALES)
-resuelve_e['Y'] = np.where(resuelve_e['PAGOS DE COSTAS Y GASTOS JUDICIALES']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['pagos_costas_gastos_judiciales']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -318,7 +322,7 @@ DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model9)
 
 #Model 10 (ADMINISTRACIÓN PROYECTOS PRODUCTIVOS AGROINDUSTRIALES)
-resuelve_e['Y'] = np.where(resuelve_e['ADMINISTRACIÓN PROYECTOS PRODUCTIVOS AGROINDUSTRIALES']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['administracion_proyectos_productivos_agroindustriales']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -334,7 +338,7 @@ DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model10)
 
 #Model 11 (OTRAS ÓRDENES)
-resuelve_e['Y'] = np.where(resuelve_e['OTRAS ÓRDENES']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['otras_ordenes']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -350,7 +354,7 @@ DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model11)
 
 #Model 12 (ORDENES A DIRECCIÓN SOCIAL)
-resuelve_e['Y'] = np.where(resuelve_e['ORDENES A DIRECCIÓN SOCIAL']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['ordenes_direccion_social']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -366,7 +370,7 @@ DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model12)
 
 #Model 13 (ORDENES CATASTRALES)
-resuelve_e['Y'] = np.where(resuelve_e['ORDENES CATASTRALES']== 'SI', 1, 0)
+resuelve_e['Y'] = np.where(resuelve_e['ordenes_catastrales']== 'SI', 1, 0)
 print(resuelve_e['Y'].value_counts(dropna=False, sort=True))
 list_text = list(resuelve_e['RE'].values)
 outputY   = resuelve_e['Y'].values
@@ -380,3 +384,5 @@ table_summary_models, nn, gradient, bagging, rf, svc, nb = models(train_x, test_
 DF = pd.concat(table_summary_models)
 DF.sort_values(by=["F1 score"],ascending=False,inplace=True)
 model_save(dframe = DF, model_name = path_out_model + '/' + file_out_model13)
+
+engine.execute("insert into tt_log_transaccion (operacion, comentario) values ('Entrenamiento','Fin proceso')")
