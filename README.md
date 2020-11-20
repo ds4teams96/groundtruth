@@ -6,8 +6,8 @@
 ## Install
 The installation process can be found in the repository file "Guía de instalación SmartScan Ubuntu 1804 LTS.docx" in Spanish.
 
-## How it works
-The elements of our Ground Truth solution are:
+## Elements
+The elements of our **Ground Truth** solution are:
 
 ### Input
 - PDF metadata obtained through a web scraping process from URT repositories.
