@@ -318,7 +318,7 @@ def print_index_file(final_index, n_level=3):
 
 def save_index_file(final_index, DBengine, n_level=3, sType='Completo'):
     if len(final_index)!=0:
-        strSQLDelete = "delete from tt_indice_sentencia where key = '" + str(final_index[0][0].split('.')[0]) + "'"
+        strSQLDelete = "delete from tt_indice_sentencia where key = '" + str(final_index[0][0].split('.')[0]) + "' and tipo = 'Completo'"
         DBengine.execute(strSQLDelete)
         for item in final_index:
             titulo = re.sub('[^\d\w\.\:\s\-]*\n*', '', item[2]).strip()
