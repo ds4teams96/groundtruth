@@ -48,12 +48,12 @@ The elements of our **Ground Truth** solution are:
 
 ### How it works?
 
-In general, the below flow explain the main features of the solution
+In general, the below flow explain the main features of the solution<br>
 <img src="Process.png" width="600px" align="center">
 
 
 
-Also, the conversion process works in this way:
+Also, the conversion process works in this way:<br>
 <img src="PDF_quality.png" width="600px" align="center">
 
 
@@ -63,9 +63,9 @@ See the below arquitecture to have a summary, but we invite you to see <a href="
 <img src="Arq1.png" width="600px" align="center">
 
 
-Check also the ER model here (you can also open <a href="ER.png">ER model image</a> to zoom it):
+Check also the ER model here (you can also open <a href="ER.png">ER model image</a> to zoom it):<br>
 <img src="ER.png" width="1000px" align="center">
 
 
-The table description is below:
+The table description is below:<br>
 <img src="Tables.png" width="600px" align="center">
